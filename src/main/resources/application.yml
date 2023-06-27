@@ -1,0 +1,14 @@
+spring:
+  profiles:
+    group:
+      local:
+        - local
+        - jwt
+      prod:
+        - prod
+        - jwt
+    active: ${SPRING_PROFILES_ACTIVE}
+---
+spring:
+  jpa:
+    open-in-view: false
