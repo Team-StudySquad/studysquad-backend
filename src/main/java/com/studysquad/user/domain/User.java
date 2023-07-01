@@ -59,4 +59,8 @@ public class User {
 		this.role = role;
 		this.refreshToken = refreshToken;
 	}
+
+	public void addRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
 }
