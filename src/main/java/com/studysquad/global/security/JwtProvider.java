@@ -34,7 +34,24 @@ public class JwtProvider {
 		this.refreshHeader = refreshHeader;
 	}
 
-	public String createAccessToken(String email) {
+	public Token createToken(String email) {
+		AccessToken accessToken = AccessToken.builder()
+			.header(accessHeader)
+			.data(createAccessToken(email))
+			.build();
+		RefreshToken refreshToken = RefreshToken.builder()
+			.header(refreshHeader)
+			.data(createRefreshToken())
+			.expirationPeriod(refreshTokenExpirationPeriod.intValue() / 1000)
+			.build();
+
+		return Token.builder()
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.build();
+	}
+
+	private String createAccessToken(String email) {
 		return Jwts.builder()
 			.setSubject(email)
 			.setExpiration(expireTime(accessTokenExpirationPeriod))
@@ -42,7 +59,7 @@ public class JwtProvider {
 			.compact();
 	}
 
-	public String createRefreshToken() {
+	private String createRefreshToken() {
 		return Jwts.builder()
 			.setExpiration(expireTime(refreshTokenExpirationPeriod))
 			.signWith(secretKey)
