@@ -42,7 +42,6 @@ public class JwtProvider {
 		RefreshToken refreshToken = RefreshToken.builder()
 			.header(refreshHeader)
 			.data(createRefreshToken())
-			.expirationPeriod(refreshTokenExpirationPeriod.intValue() / 1000)
 			.build();
 
 		return Token.builder()
