@@ -43,11 +43,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("로그인 성공")
 	void successfulLogin() throws Exception {
-		userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.password(passwordEncoder.encode("1234"))
-			.role(Role.USER)
-			.build());
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -66,11 +62,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("로그인 성공 후 헤더에 토큰 발급")
 	void afterSuccessLoginIssueTokenForHeader() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.password(passwordEncoder.encode("1234"))
-			.role(Role.USER)
-			.build());
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -90,11 +82,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("로그인 성공 후 쿠키 발급")
 	void afterSuccessLoginIssueCookie() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.password(passwordEncoder.encode("1234"))
-			.role(Role.USER)
-			.build());
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -115,7 +103,7 @@ public class AuthControllerTest {
 	@Transactional
 	@DisplayName("로그인 성공 후 RefreshToken 생성")
 	void afterSuccessLoginCreateRefreshTokenForUser() throws Exception {
-		User user = saveAndCreateUser();
+		User user = userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -136,7 +124,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("로그인 성공 시 응답 바디를 리턴해준다.")
 	void afterSuccessLoginReturnResponseBody() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -157,7 +145,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("존재하지 않는 이메일로 로그인 시도")
 	void failLoginWithNoneExistUsername() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("wrongPassword@aaa.com")
@@ -176,7 +164,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("존재하지 않는 이메일로 로그인시 응답 바디를 리턴")
 	void failLoginWithNoneExistUsernameReturnResponseBody() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("wrongPassword@aaa.com")
@@ -199,7 +187,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("일치하지 않는 비밀번호로 로그인 시도")
 	void failLoginWithIncorrectPassword() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -218,7 +206,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("일치하지 않는 비밀번호로 로그인 시도시 응답 바디 리턴")
 	void failLoginWithIncorrectPasswordReturnResponseBody() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -240,7 +228,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("이메일에 빈 문자열로 로그인 시도시 응답 바디 리턴")
 	void failLoginWithEmptyEmailReturnResponseBody() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("")
@@ -262,7 +250,7 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("비밀번호에 빈 문자열로 로그인 시도시 응답 바디 리턴")
 	void failLoginWithEmptyPasswordReturnResponseBody() throws Exception {
-		User user = saveAndCreateUser();
+		userRepository.save(createUser());
 
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
@@ -281,11 +269,11 @@ public class AuthControllerTest {
 			.andDo(print());
 	}
 
-	private User saveAndCreateUser() {
-		return userRepository.save(User.builder()
+	private User createUser() {
+		return User.builder()
 			.email("aaa@aaa.com")
 			.password(passwordEncoder.encode("1234"))
 			.role(Role.USER)
-			.build());
+			.build();
 	}
 }
