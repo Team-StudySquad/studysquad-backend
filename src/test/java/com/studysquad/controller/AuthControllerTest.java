@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
+import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
 import com.studysquad.user.repository.UserRepository;
 
@@ -269,10 +270,159 @@ public class AuthControllerTest {
 			.andDo(print());
 	}
 
+	@Test
+	@DisplayName("회원가입 성공")
+	void successfulJoin() throws Exception {
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("1234")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isOk())
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("회원가입 성공에 대한 응답바디 리턴")
+	void successfulJoinReturnResponseBody() throws Exception {
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("1234")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("200"))
+			.andExpect(jsonPath("$.message").value("회원 가입 성공"))
+			.andExpect(jsonPath("$.data").isEmpty())
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("중복된 이메일로 가입 시 응답 바디 리턴")
+	void failJoinDuplicateEmailReturnResponseBody() throws Exception {
+		userRepository.save(createUser());
+
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("password")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.status").value("409"))
+			.andExpect(jsonPath("$.message").value("중복된 이메일 입니다"))
+			.andExpect(jsonPath("$.validation").isEmpty())
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("중복된 닉네임으로 가입 시 응답 바디 리턴")
+	void failJoinDuplicateNicknameReturnResponseBody() throws Exception {
+		userRepository.save(createUser());
+
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("otherEmail@aaa.com")
+			.password("password")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.status").value("409"))
+			.andExpect(jsonPath("$.message").value("중복된 닉네임 입니다"))
+			.andExpect(jsonPath("$.validation").isEmpty())
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("이메일에 빈 문자열로 가입 시 응답 바디 리턴")
+	void failJoinEmptyEmailReturnResponseBody() throws Exception {
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("")
+			.password("1234")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value("400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
+			.andExpect(jsonPath("$.validation.email").value("이메일을 입력해주세요"))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("비밀번호에 빈 문자열로 가입 시 응답 바디 리턴")
+	void failJoinEmptyPasswordReturnResponseBody() throws Exception {
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("")
+			.nickname("nickname")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value("400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
+			.andExpect(jsonPath("$.validation.password").value("비밀번호를 입력해주세요"))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("닉네임에 빈 문자열로 가입 시 응답 바디 리턴")
+	void failJoinEmptyNicknameReturnResponseBody() throws Exception {
+		JoinRequestDto join = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("1234")
+			.nickname("")
+			.build();
+
+		String json = objectMapper.writeValueAsString(join);
+
+		mockMvc.perform(post("/api/join")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value("400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
+			.andExpect(jsonPath("$.validation.nickname").value("닉네임을 입력해주세요"))
+			.andDo(print());
+	}
+
 	private User createUser() {
 		return User.builder()
 			.email("aaa@aaa.com")
 			.password(passwordEncoder.encode("1234"))
+			.nickname("nickname")
 			.role(Role.USER)
 			.build();
 	}
