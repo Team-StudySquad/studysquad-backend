@@ -15,12 +15,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.studysquad.global.error.exception.DuplicateEmailException;
+import com.studysquad.global.error.exception.DuplicateNicknameException;
 import com.studysquad.global.error.exception.InvalidSigningInformation;
 import com.studysquad.global.security.AccessToken;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
 import com.studysquad.user.domain.User;
+import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
 import com.studysquad.user.repository.UserRepository;
 import com.studysquad.user.service.AuthService;
@@ -44,8 +47,8 @@ public class AuthServiceTest {
 	@Test
 	@DisplayName("로그인 성공")
 	void successfulLogin() {
-		User user = generatedUser();
-		Token token = generatedToken(user.getEmail());
+		User user = createUser();
+		Token token = createToken();
 
 		when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 		when(jwtProvider.createToken(user.getEmail())).thenReturn(token);
@@ -78,7 +81,7 @@ public class AuthServiceTest {
 	@Test
 	@DisplayName("일치하지 않는 비밀번호로 로그인 시도")
 	void passwordMismatchLoginFailure() {
-		User user = generatedUser();
+		User user = createUser();
 
 		when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
@@ -91,21 +94,73 @@ public class AuthServiceTest {
 			.isInstanceOf(InvalidSigningInformation.class);
 	}
 
-	private User generatedUser() {
+	@Test
+	@DisplayName("회원가입 성공")
+	void successfulJoin() {
+		JoinRequestDto joinRequestDto = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("password")
+			.nickname("nickname")
+			.build();
+
+		when(userRepository.existsByEmail(anyString())).thenReturn(false);
+		when(userRepository.existsByNickname(anyString())).thenReturn(false);
+
+		authService.join(joinRequestDto);
+
+		verify(userRepository, times(1)).save(any());
+	}
+
+	@Test
+	@DisplayName("중복된 이메일로 가입")
+	void duplicateEmailFailJoin() {
+		createUser();
+
+		JoinRequestDto joinRequestDto = JoinRequestDto.builder()
+			.email("aaa@aaa.com")
+			.password("password")
+			.nickname("nickname")
+			.build();
+
+		when(userRepository.existsByEmail(joinRequestDto.getEmail())).thenReturn(true);
+
+		assertThatThrownBy(() -> authService.join(joinRequestDto))
+			.isInstanceOf(DuplicateEmailException.class);
+	}
+
+	@Test
+	@DisplayName("중복된 닉네임으로 가입")
+	void duplicateNicknameFailJoin() {
+		createUser();
+
+		JoinRequestDto joinRequestDto = JoinRequestDto.builder()
+			.email("otherEmail@aaa.com")
+			.password("password")
+			.nickname("nickname")
+			.build();
+
+		when(userRepository.existsByEmail(anyString())).thenReturn(false);
+		when(userRepository.existsByNickname(joinRequestDto.getNickname())).thenReturn(true);
+
+		assertThatThrownBy(() -> authService.join(joinRequestDto))
+			.isInstanceOf(DuplicateNicknameException.class);
+	}
+
+	private User createUser() {
 		return User.builder()
 			.email("aaa@aaa.com")
 			.password(passwordEncoder.encode("password"))
+			.nickname("nickname")
 			.build();
 	}
 
-	private Token generatedToken(String email) {
+	private Token createToken() {
 		AccessToken accessToken = AccessToken.builder()
 			.header("Authorization")
 			.data("accessToken")
 			.build();
 		RefreshToken refreshToken = RefreshToken.builder()
 			.header("Authorization-refresh")
-			.expirationPeriod(10)
 			.data("refreshToken")
 			.build();
 		return Token.builder()
