@@ -14,6 +14,7 @@ import com.studysquad.global.common.SuccessResponse;
 import com.studysquad.global.security.AccessToken;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
+import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
 import com.studysquad.user.service.AuthService;
 
@@ -36,6 +37,17 @@ public class AuthController {
 		return SuccessResponse.<Void>builder()
 			.status(200)
 			.message("로그인 성공")
+			.build();
+	}
+
+	@PostMapping("/api/join")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<Void> signUp(@RequestBody @Valid JoinRequestDto joinDto) {
+		authService.join(joinDto);
+
+		return SuccessResponse.<Void>builder()
+			.status(200)
+			.message("회원 가입 성공")
 			.build();
 	}
 
