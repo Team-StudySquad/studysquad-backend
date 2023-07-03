@@ -4,10 +4,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.studysquad.global.error.exception.DuplicateEmailException;
+import com.studysquad.global.error.exception.DuplicateNicknameException;
 import com.studysquad.global.error.exception.InvalidSigningInformation;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.Token;
 import com.studysquad.user.domain.User;
+import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
 import com.studysquad.user.repository.UserRepository;
 
@@ -39,5 +42,18 @@ public class AuthService {
 		user.addRefreshToken(token.getRefreshToken().getData());
 
 		return token;
+	}
+
+	@Transactional
+	public void join(JoinRequestDto joinRequestDto) {
+		if (userRepository.existsByEmail(joinRequestDto.getEmail())) {
+			throw new DuplicateEmailException();
+		}
+		if (userRepository.existsByNickname(joinRequestDto.getNickname())) {
+			throw new DuplicateNicknameException();
+		}
+		joinRequestDto.passwordEncryption(passwordEncoder);
+
+		userRepository.save(joinRequestDto.toEntity());
 	}
 }
