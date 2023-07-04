@@ -60,7 +60,7 @@ public class User {
 		this.refreshToken = refreshToken;
 	}
 
-	public void addRefreshToken(String refreshToken) {
+	public void updateRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
 }

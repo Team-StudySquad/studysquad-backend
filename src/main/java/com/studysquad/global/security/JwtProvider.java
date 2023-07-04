@@ -50,6 +50,19 @@ public class JwtProvider {
 			.build();
 	}
 
+	public boolean isTokenValid(String token) {
+		try {
+			Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	private String createAccessToken(String email) {
 		return Jwts.builder()
 			.setSubject(email)

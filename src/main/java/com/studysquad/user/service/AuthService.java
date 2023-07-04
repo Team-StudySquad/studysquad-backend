@@ -7,7 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.studysquad.global.error.exception.DuplicateEmailException;
 import com.studysquad.global.error.exception.DuplicateNicknameException;
 import com.studysquad.global.error.exception.InvalidSigningInformation;
+import com.studysquad.global.error.exception.InvalidTokenException;
+import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.global.security.JwtProvider;
+import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.JoinRequestDto;
@@ -39,7 +42,7 @@ public class AuthService {
 
 		Token token = jwtProvider.createToken(email);
 
-		user.addRefreshToken(token.getRefreshToken().getData());
+		user.updateRefreshToken(token.getRefreshToken().getData());
 
 		return token;
 	}
@@ -56,4 +59,22 @@ public class AuthService {
 
 		userRepository.save(joinRequestDto.toEntity());
 	}
+
+	@Transactional
+	public Token reissue(RefreshToken refreshToken) {
+		String refreshTokenValue = refreshToken.getData();
+
+		if (!jwtProvider.isTokenValid(refreshTokenValue)) {
+			throw new InvalidTokenException();
+		}
+
+		User user = userRepository.findByRefreshToken(refreshTokenValue)
+			.orElseThrow(UserNotFoundException::new);
+		Token token = jwtProvider.createToken(user.getEmail());
+
+		user.updateRefreshToken(token.getRefreshToken().getData());
+
+		return token;
+	}
+
 }
