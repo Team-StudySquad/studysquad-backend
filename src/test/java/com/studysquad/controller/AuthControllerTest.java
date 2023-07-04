@@ -5,6 +5,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.Arrays;
+import java.util.Optional;
+
+import javax.servlet.http.Cookie;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,11 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.global.security.JwtProvider;
+import com.studysquad.global.security.RefreshToken;
+import com.studysquad.global.security.Token;
 import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.JoinRequestDto;
@@ -35,6 +44,8 @@ public class AuthControllerTest {
 	PasswordEncoder passwordEncoder;
 	@Autowired
 	ObjectMapper objectMapper;
+	@Autowired
+	JwtProvider jwtProvider;
 
 	@BeforeEach
 	void clean() {
@@ -415,6 +426,95 @@ public class AuthControllerTest {
 			.andExpect(jsonPath("$.status").value("400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
 			.andExpect(jsonPath("$.validation.nickname").value("닉네임을 입력해주세요"))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("토큰 재발급 성공")
+	@Transactional
+	void successfulReissueToken() throws Exception {
+		User user = userRepository.save(createUser());
+		Token token = jwtProvider.createToken(user.getEmail());
+		RefreshToken refreshToken = token.getRefreshToken();
+
+		user.updateRefreshToken(refreshToken.getData());
+
+		Cookie requestCookie = new Cookie(refreshToken.getHeader(), refreshToken.getData());
+
+		mockMvc.perform(post("/api/reissue")
+				.cookie(requestCookie))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("200"))
+			.andExpect(jsonPath("$.message").value("토큰 재발급 성공"))
+			.andExpect(header().exists(token.getAccessToken().getHeader()))
+			.andExpect(cookie().exists(refreshToken.getHeader()))
+			.andExpect(result -> {
+				MockHttpServletResponse response = result.getResponse();
+				Cookie[] cookies = response.getCookies();
+				Optional<Cookie> myCookie = Arrays.stream(cookies)
+					.filter(cookie -> cookie.getName().equals(refreshToken.getHeader()))
+					.findFirst();
+
+				assertThat(myCookie).isPresent();
+				assertThat(myCookie.get().getValue()).isEqualTo(user.getRefreshToken());
+			})
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("유효하지 않은 토큰으로 요청시 응답 바디 리턴")
+	void failReissueWrongTokenReturnResponseBody() throws Exception {
+		RefreshToken wrongToken = RefreshToken.builder()
+			.header(jwtProvider.getRefreshHeader())
+			.data("wrongData")
+			.build();
+		Cookie requestCookie = new Cookie(wrongToken.getHeader(), wrongToken.getData());
+
+		mockMvc.perform(post("/api/reissue")
+				.cookie(requestCookie))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.status").value("401"))
+			.andExpect(jsonPath("$.message").value("유효하지 않는 토큰입니다"))
+			.andExpect(result -> {
+				MockHttpServletResponse response = result.getResponse();
+				Cookie[] cookies = response.getCookies();
+
+				Optional<Cookie> myCookie = Arrays.stream(cookies)
+					.filter(cookie -> cookie.getName().equals(jwtProvider.getRefreshHeader()))
+					.findFirst();
+
+				assertThat(myCookie).isEmpty();
+			})
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 사용자 정보를 가지고 요청")
+	@Transactional
+	void failReissueExistTokenReturnResponseBody() throws Exception {
+		User user = userRepository.save(createUser());
+		Token token = jwtProvider.createToken(user.getEmail());
+		RefreshToken refreshToken = token.getRefreshToken();
+
+		user.updateRefreshToken("refreshToken");
+
+		Cookie requestCookie = new Cookie(refreshToken.getHeader(), refreshToken.getData());
+
+		mockMvc.perform(post("/api/reissue")
+				.cookie(requestCookie))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value("404"))
+			.andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다"))
+			.andExpect(result -> {
+				MockHttpServletResponse response = result.getResponse();
+				Cookie[] cookies = response.getCookies();
+
+				Optional<Cookie> myCookie = Arrays.stream(cookies)
+					.filter(cookie -> cookie.getName().equals(jwtProvider.getRefreshHeader()))
+					.findFirst();
+
+				assertThat(myCookie).isEmpty();
+			})
 			.andDo(print());
 	}
 
