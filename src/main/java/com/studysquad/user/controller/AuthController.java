@@ -51,6 +51,20 @@ public class AuthController {
 			.build();
 	}
 
+	@PostMapping("/api/reissue")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<Void> reissueToken(RefreshToken refreshToken, HttpServletResponse response) {
+		Token token = authService.reissue(refreshToken);
+
+		setAccessToken(response, token.getAccessToken());
+		setRefreshToken(response, token.getRefreshToken());
+
+		return SuccessResponse.<Void>builder()
+			.status(200)
+			.message("토큰 재발급 성공")
+			.build();
+	}
+
 	private void setAccessToken(HttpServletResponse response, AccessToken accessToken) {
 		setHeader(response, accessToken.getHeader(), accessToken.getData());
 	}

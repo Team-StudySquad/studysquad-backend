@@ -30,7 +30,7 @@ public class SecurityConfig {
 			.and()
 			.authorizeRequests()
 			.requestMatchers(toH2Console()).permitAll()
-			.mvcMatchers("/api/login", "/api/join").permitAll()
+			.mvcMatchers("/api/login", "/api/join", "/api/reissue").permitAll()
 			.anyRequest().authenticated();
 
 		return http.build();
