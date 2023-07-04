@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.studysquad.global.error.exception.DuplicateEmailException;
 import com.studysquad.global.error.exception.DuplicateNicknameException;
 import com.studysquad.global.error.exception.InvalidSigningInformation;
+import com.studysquad.global.error.exception.InvalidTokenException;
+import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.global.security.AccessToken;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.RefreshToken;
@@ -144,6 +146,57 @@ public class AuthServiceTest {
 
 		assertThatThrownBy(() -> authService.join(joinRequestDto))
 			.isInstanceOf(DuplicateNicknameException.class);
+	}
+
+	@Test
+	@DisplayName("토큰 재발급 성공")
+	void successfulReissue() {
+		User user = createUser();
+		Token token = createToken();
+		RefreshToken refreshToken = RefreshToken.builder()
+			.header("Authorization-refresh")
+			.data("validRefreshToken")
+			.build();
+		String refreshTokenValue = refreshToken.getData();
+
+		when(userRepository.findByRefreshToken(refreshTokenValue)).thenReturn(Optional.of(user));
+		when(jwtProvider.isTokenValid(refreshTokenValue)).thenReturn(true);
+		when(jwtProvider.createToken(user.getEmail())).thenReturn(token);
+
+		Token returnedToken = authService.reissue(refreshToken);
+
+		assertThat(returnedToken.getAccessToken()).isNotNull();
+		assertThat(returnedToken.getRefreshToken()).isNotNull();
+	}
+
+	@Test
+	@DisplayName("올바르지 않은 RefreshToken으로 요청")
+	void failReissueWithInvalidRefreshToken() {
+		RefreshToken invalidToken = RefreshToken.builder()
+			.header("Authorization-refresh")
+			.data("invalidRefreshToken")
+			.build();
+
+		when(jwtProvider.isTokenValid(invalidToken.getData())).thenReturn(false);
+
+		assertThatThrownBy(() -> authService.reissue(invalidToken))
+			.isInstanceOf(InvalidTokenException.class);
+	}
+
+	@Test
+	@DisplayName("RefreshToken으로 사용자 정보를 찾을 수 없음")
+	void failReissueWithUserNotFound() {
+		RefreshToken refreshToken = RefreshToken.builder()
+			.header("Authorization-refresh")
+			.data("validRefreshToken")
+			.build();
+		String refreshTokenValue = refreshToken.getData();
+
+		when(userRepository.findByRefreshToken(refreshTokenValue)).thenReturn(Optional.empty());
+		when(jwtProvider.isTokenValid(refreshTokenValue)).thenReturn(true);
+
+		assertThatThrownBy(() -> authService.reissue(refreshToken))
+			.isInstanceOf(UserNotFoundException.class);
 	}
 
 	private User createUser() {
