@@ -3,6 +3,9 @@ package com.studysquad.global.security;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,6 +23,7 @@ public class JwtProvider {
 	private final String accessHeader;
 	private final Long refreshTokenExpirationPeriod;
 	private final String refreshHeader;
+	private static final String BEARER = "Bearer ";
 
 	public JwtProvider(@Value("${jwt.secretKey}") String secretKey,
 		@Value("${jwt.access.expiration}") Long accessTokenExpirationPeriod,
@@ -48,6 +52,21 @@ public class JwtProvider {
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.build();
+	}
+
+	public Optional<String> extractToken(HttpServletRequest request) {
+		return Optional.ofNullable(request.getHeader(accessHeader))
+			.filter(token -> token.startsWith(BEARER))
+			.map(token -> token.replace(BEARER, ""));
+	}
+
+	public String getUsernameFromToken(String token) {
+		return Jwts.parserBuilder()
+			.setSigningKey(secretKey)
+			.build()
+			.parseClaimsJws(token)
+			.getBody()
+			.getSubject();
 	}
 
 	public boolean isTokenValid(String token) {
