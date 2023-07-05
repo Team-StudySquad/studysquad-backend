@@ -16,20 +16,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.repository.UserRepository;
-import com.studysquad.user.service.LoginService;
+import com.studysquad.user.service.ApiUserDetailsService;
 
-class LoginServiceTest {
+class ApiUserDetailsServiceTest {
 
 	@Mock
 	UserRepository mockRepository;
 
 	@InjectMocks
-	LoginService loginService;
+	ApiUserDetailsService apiUserDetailsService;
 
 	@BeforeEach
 	void init() {
 		mockRepository = mock(UserRepository.class);
-		loginService = new LoginService(mockRepository);
+		apiUserDetailsService = new ApiUserDetailsService(mockRepository);
 	}
 
 	@Test
@@ -42,7 +42,7 @@ class LoginServiceTest {
 			.build();
 		when(mockRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-		UserDetails result = loginService.loadUserByUsername(user.getEmail());
+		UserDetails result = apiUserDetailsService.loadUserByUsername(user.getEmail());
 
 		assertThat(user.getEmail()).isEqualTo(result.getUsername());
 		assertThat(user.getPassword()).isEqualTo(result.getPassword());
@@ -58,7 +58,7 @@ class LoginServiceTest {
 
 		when(mockRepository.findByEmail(invalidEmail)).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> loginService.loadUserByUsername(invalidEmail))
+		assertThatThrownBy(() -> apiUserDetailsService.loadUserByUsername(invalidEmail))
 			.isInstanceOf(UsernameNotFoundException.class);
 	}
 }
