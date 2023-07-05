@@ -10,6 +10,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.studysquad.global.filter.ApiAccessDeniedHandler;
+import com.studysquad.global.filter.ApiAuthenticationEntryPoint;
+import com.studysquad.global.filter.JwtAuthenticationFilter;
+import com.studysquad.global.security.JwtProvider;
+import com.studysquad.user.service.ApiUserDetailsService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +24,11 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+	private final JwtProvider jwtProvider;
+	private final ApiUserDetailsService userDetailsService;
+	private final ApiAuthenticationEntryPoint entryPoint;
+	private final ApiAccessDeniedHandler deniedHandler;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,7 +43,12 @@ public class SecurityConfig {
 			.authorizeRequests()
 			.requestMatchers(toH2Console()).permitAll()
 			.mvcMatchers("/api/login", "/api/join", "/api/reissue").permitAll()
-			.anyRequest().authenticated();
+			.anyRequest().authenticated()
+			.and()
+			.exceptionHandling()
+			.authenticationEntryPoint(entryPoint)
+			.accessDeniedHandler(deniedHandler);
+		http.addFilterAfter(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
@@ -39,5 +56,10 @@ public class SecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public JwtAuthenticationFilter jwtAuthenticationFilter() {
+		return new JwtAuthenticationFilter(jwtProvider, userDetailsService);
 	}
 }
