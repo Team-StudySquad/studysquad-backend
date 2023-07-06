@@ -15,6 +15,7 @@ import com.studysquad.global.security.Token;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
+import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -77,4 +78,11 @@ public class AuthService {
 		return token;
 	}
 
+	@Transactional
+	public void logout(LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		user.invalidateRefreshToken();
+	}
 }
