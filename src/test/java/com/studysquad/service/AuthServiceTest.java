@@ -24,9 +24,11 @@ import com.studysquad.global.security.AccessToken;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
+import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
+import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.repository.UserRepository;
 import com.studysquad.user.service.AuthService;
 
@@ -199,6 +201,37 @@ public class AuthServiceTest {
 			.isInstanceOf(UserNotFoundException.class);
 	}
 
+	@Test
+	@DisplayName("로그아웃 성공")
+	void successLogout() {
+		User user = createUser();
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.role(Role.USER)
+			.build();
+		user.updateRefreshToken(createRefreshToken().getData());
+
+		when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+		authService.logout(loginUser);
+
+		assertThat(user.getRefreshToken()).isNull();
+	}
+
+	@Test
+	@DisplayName("LoginUser 정보로 사용자를 찾을 수 없음")
+	void failLogoutNotFoundUserWithLoginUser() {
+		LoginUser loginUser = LoginUser.builder()
+			.email("wrongEmail")
+			.role(Role.USER)
+			.build();
+
+		when(userRepository.findByEmail(loginUser.getEmail())).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> authService.logout(loginUser))
+			.isInstanceOf(UserNotFoundException.class);
+	}
+
 	private User createUser() {
 		return User.builder()
 			.email("aaa@aaa.com")
@@ -208,17 +241,23 @@ public class AuthServiceTest {
 	}
 
 	private Token createToken() {
-		AccessToken accessToken = AccessToken.builder()
+		return Token.builder()
+			.accessToken(createAccessToken())
+			.refreshToken(createRefreshToken())
+			.build();
+	}
+
+	private AccessToken createAccessToken() {
+		return AccessToken.builder()
 			.header("Authorization")
 			.data("accessToken")
 			.build();
-		RefreshToken refreshToken = RefreshToken.builder()
+	}
+
+	private RefreshToken createRefreshToken() {
+		return RefreshToken.builder()
 			.header("Authorization-refresh")
 			.data("refreshToken")
-			.build();
-		return Token.builder()
-			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.build();
 	}
 }
