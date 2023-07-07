@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.studysquad.global.common.SuccessResponse;
 import com.studysquad.global.security.AccessToken;
+import com.studysquad.global.security.Login;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
 import com.studysquad.user.dto.JoinRequestDto;
 import com.studysquad.user.dto.LoginRequestDto;
+import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -65,6 +67,19 @@ public class AuthController {
 			.build();
 	}
 
+	@PostMapping("/api/logout")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<Void> logout(@Login LoginUser loginUser, HttpServletResponse response) {
+		authService.logout(loginUser);
+
+		removeCookie(response);
+
+		return SuccessResponse.<Void>builder()
+			.status(200)
+			.message("로그아웃 성공")
+			.build();
+	}
+
 	private void setAccessToken(HttpServletResponse response, AccessToken accessToken) {
 		setHeader(response, accessToken.getHeader(), accessToken.getData());
 	}
@@ -84,5 +99,13 @@ public class AuthController {
 		cookie.setMaxAge(RefreshToken.EXPIRATION_PERIOD);
 		cookie.setHttpOnly(true);
 		return cookie;
+	}
+
+	private void removeCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("Authorization-refresh", null);
+		cookie.setPath("/");
+		cookie.setMaxAge(0);
+
+		response.addCookie(cookie);
 	}
 }
