@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -35,15 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (token != null) {
 			String username = jwtProvider.getUsernameFromToken(token);
 
-			UserDetails userDetails = apiUserDetailsService.loadUserByUsername(username);
+			try {
+				UserDetails userDetails = apiUserDetailsService.loadUserByUsername(username);
 
-			if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-				UsernamePasswordAuthenticationToken authenticationToken =
-					new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-				authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+					UsernamePasswordAuthenticationToken authenticationToken =
+						new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+					authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-				SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+					SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+				}
+			} catch (AuthenticationException e) {
+				filterChain.doFilter(request, response);
+				return;
 			}
+
 		}
 		filterChain.doFilter(request, response);
 	}
