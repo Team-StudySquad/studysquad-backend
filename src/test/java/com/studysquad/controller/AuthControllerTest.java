@@ -518,6 +518,40 @@ public class AuthControllerTest {
 			.andDo(print());
 	}
 
+	@Test
+	@DisplayName("로그아웃 성공")
+	@Transactional
+	void SuccessLogout() throws Exception {
+		User user = userRepository.save(createUser());
+		Token token = jwtProvider.createToken(user.getEmail());
+
+		user.updateRefreshToken(token.getRefreshToken().getData());
+
+		mockMvc.perform(post("/api/logout")
+				.header(token.getAccessToken().getHeader(), "Bearer " + token.getAccessToken().getData()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("200"))
+			.andExpect(jsonPath("$.message").value("로그아웃 성공"))
+			.andExpect(jsonPath("$.data").isEmpty())
+			.andDo(print());
+
+		assertThat(user.getRefreshToken()).isNull();
+	}
+
+	@Test
+	@DisplayName("유효하지 않는 토큰으로 로그아웃 요청 시 응답 바디 리턴")
+	void failLogoutInvalidAccessTokenReturnResponseBody() throws Exception {
+		Token token = jwtProvider.createToken("invalidUserData");
+
+		mockMvc.perform(post("/api/logout")
+				.header(token.getAccessToken().getHeader(), "Bearer " + token.getAccessToken().getData()))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.status").value("401"))
+			.andExpect(jsonPath("$.message").value("인증되지 않은 사용자 입니다."))
+			.andExpect(jsonPath("$.validation").isEmpty())
+			.andDo(print());
+	}
+
 	private User createUser() {
 		return User.builder()
 			.email("aaa@aaa.com")
