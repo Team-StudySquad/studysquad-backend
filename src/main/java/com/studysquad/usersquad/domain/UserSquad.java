@@ -1,39 +1,45 @@
 package com.studysquad.usersquad.domain;
 
+import static javax.persistence.FetchType.*;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.user.domain.User;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
-
-import static javax.persistence.FetchType.LAZY;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserSquad {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+	@ManyToOne(fetch = LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "squad_id")
-    private Squad squad;
+	@ManyToOne(fetch = LAZY)
+	@JoinColumn(name = "squad_id")
+	private Squad squad;
 
-    private boolean metored;
+	private boolean isMentor;
 
-    @Builder
-    public UserSquad(User user, Squad squad, boolean metored) {
-        this.user = user;
-        this.squad = squad;
-        this.metored = metored;
-    }
+	@Builder
+	public UserSquad(User user, Squad squad, boolean isMentor) {
+		this.user = user;
+		this.squad = squad;
+		this.isMentor = isMentor;
+	}
 }
