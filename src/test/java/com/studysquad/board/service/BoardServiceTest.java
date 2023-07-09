@@ -2,12 +2,19 @@ package com.studysquad.board.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +79,29 @@ class BoardServiceTest {
 		assertNotNull(response);
 		assertEquals("제목입니다2", response.getTitle());
 		assertEquals("내용입니다2", response.getContent());
+	}
+
+	@Test
+	@DisplayName("글 1페이지 조회")
+	void test3(){
+		//given
+		List<Board> reqeustBoards = IntStream.rangeClosed(1, 30)
+			.mapToObj(i -> Board.builder()
+				.title("제목 " + i)
+				.content("내용 " + i)
+				.build())
+			.collect(Collectors.toList());
+
+		boardRepository.saveAll(reqeustBoards);
+
+		Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
+
+		//when
+		List<BoardResponse> boards = boardService.getAllBoards(pageable);
+
+		//then
+		assertEquals(5, boards.size());
+
 	}
 
 

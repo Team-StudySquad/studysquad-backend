@@ -3,8 +3,14 @@ package com.studysquad.board.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import javax.transaction.Transactional;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
+import com.studysquad.board.response.BoardResponse;
 import com.studysquad.mission.domain.Mission;
 
 @SpringBootTest
@@ -86,6 +93,31 @@ class BoardControllerTest {
 			.andExpect(MockMvcResultMatchers.jsonPath("$.content").value("내용입니다2"))
 			.andDo(MockMvcResultHandlers.print());
 	}
+
+	@Test
+	@DisplayName("글 1페이지 조회")
+	void test3() throws Exception{
+		//given
+		List<Board> requestBoards = IntStream.rangeClosed(1, 30)
+			.mapToObj(i -> Board.builder()
+				.title("제목 " + i)
+				.content("내용 " + i)
+				.build())
+			.collect(Collectors.toList());
+
+		boardRepository.saveAll(requestBoards);
+
+		mockMvc.perform(MockMvcRequestBuilders.get("/boards?page=0&sort=id,desc")
+			.contentType(APPLICATION_JSON))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.jsonPath("$.length()", Matchers.is(5)))
+			.andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(30))
+			.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("제목 30"))
+			.andExpect(MockMvcResultMatchers.jsonPath("$[0].content").value("내용 30"))
+			.andDo(MockMvcResultHandlers.print());
+
+	}
+
 
 
 

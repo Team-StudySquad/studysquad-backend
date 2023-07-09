@@ -1,5 +1,8 @@
 package com.studysquad.board.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
@@ -7,6 +10,10 @@ import com.studysquad.board.response.BoardResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -33,5 +40,11 @@ public class BoardService {
             .title(response.getTitle())
             .content(response.getContent())
             .build();
+    }
+
+    public List<BoardResponse> getAllBoards(Pageable pageable){
+        return boardRepository.findAll(pageable).stream()
+            .map(BoardResponse::new)
+            .collect(Collectors.toList());
     }
 }
