@@ -24,13 +24,18 @@ public class BoardService {
         boardRepository.save(board);
     }
 
-    public BoardResponse get(Long Id){
-        Board response = boardRepository.findById(Id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 Id 입니다."));
+    public Board get(Long id){
+        return boardRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
+
+
+        /*
+        Board response = boardRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
         return BoardResponse.builder()
             .id(response.getId())
             .title(response.getTitle())
             .content(response.getContent())
-            .build();
+            .build();*/
     }
 }

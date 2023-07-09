@@ -19,7 +19,7 @@ public class BoardResponse {
 
 	@Builder
 	public BoardResponse(Long id, String title, String content) {
-		Id = id;
+		this.Id = id;
 		this.title = title;
 		this.content = content;
 	}
