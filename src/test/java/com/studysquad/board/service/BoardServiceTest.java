@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
+import com.studysquad.board.response.BoardResponse;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -66,11 +67,11 @@ class BoardServiceTest {
 			.build();
 		boardRepository.save(request);
 		//when
-		Board board = boardService.get(request.getId());
+		BoardResponse response= boardService.get(request.getId());
 		//then
-		assertNotNull(board);
-		assertEquals("제목입니다2", board.getTitle());
-		assertEquals("내용입니다2", board.getContent());
+		assertNotNull(response);
+		assertEquals("제목입니다2", response.getTitle());
+		assertEquals("내용입니다2", response.getContent());
 	}
 
 

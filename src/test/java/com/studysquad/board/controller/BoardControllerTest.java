@@ -78,7 +78,6 @@ class BoardControllerTest {
 
 		boardRepository.save(board);
 
-
 		mockMvc.perform(MockMvcRequestBuilders.get("/boards/{boardId}", board.getId())
 			.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(MockMvcResultMatchers.status().isOk())

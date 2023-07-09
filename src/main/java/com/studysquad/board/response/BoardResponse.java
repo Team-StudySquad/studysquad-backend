@@ -9,7 +9,7 @@ import lombok.Getter;
 public class BoardResponse {
 	private final Long Id;
 	private final String title;
-	private final String content;
+	private final String content; // 상수로 생성, Read Only
 
 	public BoardResponse(Board board){
 		this.Id = board.getId();
@@ -20,7 +20,7 @@ public class BoardResponse {
 	@Builder
 	public BoardResponse(Long id, String title, String content) {
 		this.Id = id;
-		this.title = title;
+		this.title = title.substring(0, Math.min(title.length(), 10));
 		this.content = content;
 	}
 }
