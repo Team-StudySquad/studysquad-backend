@@ -29,11 +29,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
+import com.studysquad.board.request.BoardEdit;
 import com.studysquad.board.response.BoardResponse;
 import com.studysquad.mission.domain.Mission;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class BoardControllerTest {
 
 	@Autowired
@@ -76,7 +78,6 @@ class BoardControllerTest {
 
 	@Test
 	@DisplayName("boardId를 통한 글 조회")
-	@Transactional
 	void test2() throws Exception{
 		Board board = Board.builder()
 			.title("제목입니다2")
@@ -115,7 +116,31 @@ class BoardControllerTest {
 			.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("제목 30"))
 			.andExpect(MockMvcResultMatchers.jsonPath("$[0].content").value("내용 30"))
 			.andDo(MockMvcResultHandlers.print());
+	}
 
+
+	@Test
+	@DisplayName("글 제목 수정")
+	void test4() throws Exception{
+		//given
+		Board board = Board.builder()
+			.title("제목입니다1")
+			.content("내용입니다1")
+			.build();
+
+		boardRepository.save(board);
+
+		BoardEdit boardEdit = BoardEdit.builder()
+			.title("제목입니다2")
+			.content("내용입니다2")
+			.build();
+
+		//expected
+		mockMvc.perform(MockMvcRequestBuilders.patch("/boards/{boardId}", board.getId())
+			.contentType(APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(boardEdit)))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(MockMvcResultHandlers.print());
 	}
 
 

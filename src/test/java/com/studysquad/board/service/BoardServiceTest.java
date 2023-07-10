@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
+import com.studysquad.board.request.BoardEdit;
 import com.studysquad.board.response.BoardResponse;
 
 @SpringBootTest
@@ -101,7 +102,56 @@ class BoardServiceTest {
 
 		//then
 		assertEquals(5, boards.size());
+	}
 
+	@Test
+	@DisplayName("글 제목 수정")
+	void test4(){
+		//given
+		Board board = Board.builder()
+				.title("제목입니다1")
+				.content("내용입니다1")
+				.build();
+
+		boardRepository.save(board);
+
+		BoardEdit boardEdit = BoardEdit.builder()
+			.title("제목입니다2")
+			.build();
+
+		//when
+		boardService.edit(board.getId(), boardEdit);
+		//then
+		Board changeBoard = boardRepository.findById(board.getId())
+			.orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id="+ board.getId()));
+
+		assertEquals("제목입니다2", changeBoard.getTitle());
+		assertEquals("내용입니다1", changeBoard.getContent());
+	}
+
+	@Test
+	@DisplayName("글 내용 수정")
+	void test5(){
+		//given
+		Board board = Board.builder()
+			.title("제목입니다1")
+			.content("내용입니다1")
+			.build();
+
+		boardRepository.save(board);
+
+		BoardEdit boardEdit = BoardEdit.builder()
+			.content("내용입니다2")
+			.build();
+
+		//when
+		boardService.edit(board.getId(), boardEdit);
+		//then
+		Board changeBoard = boardRepository.findById(board.getId())
+			.orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id="+ board.getId()));
+
+		assertEquals("제목입니다1", changeBoard.getTitle());
+		assertEquals("내용입니다2", changeBoard.getContent());
 	}
 
 
