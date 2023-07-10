@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,11 @@ public class BoardController {
     @PatchMapping("/boards/{boardId}")
     public void edit(@PathVariable Long boardId, @RequestBody @Valid BoardEdit request){
         boardService.edit(boardId, request);
+    }
+
+    @DeleteMapping("/boards/{boardId}")
+    public void delete(@PathVariable Long boardId){
+        boardService.delete(boardId);
     }
 
 

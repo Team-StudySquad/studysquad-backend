@@ -144,6 +144,23 @@ class BoardControllerTest {
 	}
 
 
+	@Test
+	@DisplayName("게시글 삭제")
+	void test8() throws Exception {
+		//given
+		Board board = Board.builder()
+			.title("제목입니다1")
+			.content("내용입니다1")
+			.build();
+		boardRepository.save(board);
+
+		mockMvc.perform(MockMvcRequestBuilders.delete("/boards/{boardId}", board.getId())
+			.contentType(APPLICATION_JSON))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(MockMvcResultHandlers.print());
+	}
+
+
 
 
 }

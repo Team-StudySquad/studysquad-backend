@@ -154,7 +154,20 @@ class BoardServiceTest {
 		assertEquals("내용입니다2", changeBoard.getContent());
 	}
 
+	@Test
+	@DisplayName("게시글 삭제")
+	void test6(){
+		Board board = Board.builder()
+			.title("제목입니다1")
+			.content("내용입니다1")
+			.build();
+		boardRepository.save(board);
+		//when
+		boardService.delete(board.getId());
 
+		//then
+		assertEquals(0, boardRepository.count());
+	}
 
 
 
