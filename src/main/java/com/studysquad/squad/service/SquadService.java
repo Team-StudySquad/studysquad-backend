@@ -15,6 +15,7 @@ import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.repository.UserRepository;
 import com.studysquad.usersquad.domain.UserSquad;
+import com.studysquad.usersquad.repository.UserSquadRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,7 @@ public class SquadService {
 
 	private final UserRepository userRepository;
 	private final SquadRepository squadRepository;
+	private final UserSquadRepository userSquadRepository;
 	private final CategoryRepository categoryRepository;
 
 	@Transactional
@@ -32,7 +34,7 @@ public class SquadService {
 		User user = userRepository.findByEmail(loginUser.getEmail())
 			.orElseThrow(UserNotFoundException::new);
 
-		if (squadRepository.isUserInActiveSquad(user.getId())) {
+		if (userSquadRepository.hasActiveSquadByUserId(user.getId())) {
 			throw new ExistActiveSquadException();
 		}
 
@@ -40,10 +42,9 @@ public class SquadService {
 			.orElseThrow(InvalidCategoryException::new);
 
 		Squad squad = Squad.createSquad(category, squadCreateDto);
-
 		UserSquad userSquad = UserSquad.createUserSquad(user, squad, squadCreateDto.isMentor());
-		squad.addUserSquad(userSquad);
 
 		squadRepository.save(squad);
+		userSquadRepository.save(userSquad);
 	}
 }
