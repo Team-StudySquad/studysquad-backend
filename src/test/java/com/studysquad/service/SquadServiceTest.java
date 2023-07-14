@@ -25,6 +25,8 @@ import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.repository.UserRepository;
+import com.studysquad.usersquad.domain.UserSquad;
+import com.studysquad.usersquad.repository.UserSquadRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class SquadServiceTest {
@@ -32,7 +34,9 @@ public class SquadServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	@Mock
-	SquadRepository squadRepository;
+	private SquadRepository squadRepository;
+	@Mock
+	UserSquadRepository userSquadRepository;
 	@Mock
 	CategoryRepository categoryRepository;
 	@InjectMocks
@@ -48,7 +52,7 @@ public class SquadServiceTest {
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
-		when(squadRepository.isUserInActiveSquad(user.getId()))
+		when(userSquadRepository.hasActiveSquadByUserId(user.getId()))
 			.thenReturn(false);
 		when(categoryRepository.findByCategoryName(squadCreateDto.getCategoryName()))
 			.thenReturn(Optional.of(category));
@@ -56,8 +60,9 @@ public class SquadServiceTest {
 		squadService.createSquad(squadCreateDto, loginUser);
 
 		verify(userRepository).findByEmail(loginUser.getEmail());
-		verify(squadRepository).isUserInActiveSquad(user.getId());
+		verify(userSquadRepository).hasActiveSquadByUserId(user.getId());
 		verify(categoryRepository).findByCategoryName(squadCreateDto.getCategoryName());
+		verify(userSquadRepository).save(any(UserSquad.class));
 		verify(squadRepository).save(any(Squad.class));
 	}
 
@@ -76,7 +81,7 @@ public class SquadServiceTest {
 	}
 
 	@Test
-	@DisplayName("스쿼드 생성 시 이미 진행중인 스쿼드가 존재")
+	@DisplayName("스쿼드 생성 시 이미 활성화된 스쿼드가 존재")
 	void failCreateSquadAlreadyExistProgressSquad() {
 		User user = createUser();
 		SquadCreateDto squadCreateDto = createSquadCreateDto("Java");
@@ -84,12 +89,12 @@ public class SquadServiceTest {
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
-		when(squadRepository.isUserInActiveSquad(user.getId()))
+		when(userSquadRepository.hasActiveSquadByUserId(user.getId()))
 			.thenReturn(true);
 
 		assertThatThrownBy(() -> squadService.createSquad(squadCreateDto, loginUser))
 			.isInstanceOf(ExistActiveSquadException.class)
-			.message().isEqualTo("이미 진행중인 스쿼드가 존재 합니다");
+			.message().isEqualTo("이미 활성화된 스쿼드가 존재 합니다");
 	}
 
 	@Test
@@ -101,7 +106,7 @@ public class SquadServiceTest {
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
-		when(squadRepository.isUserInActiveSquad(user.getId()))
+		when(userSquadRepository.hasActiveSquadByUserId(user.getId()))
 			.thenReturn(false);
 		when(categoryRepository.findByCategoryName(squadCreateDto.getCategoryName()))
 			.thenReturn(Optional.empty());
