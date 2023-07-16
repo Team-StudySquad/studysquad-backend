@@ -25,29 +25,29 @@ public class UserSquad {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	@ManyToOne(fetch = LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
-
 	@ManyToOne(fetch = LAZY)
 	@JoinColumn(name = "squad_id")
 	private Squad squad;
-
 	private boolean isMentor;
+	private boolean isCreator;
 
 	@Builder
-	public UserSquad(User user, Squad squad, boolean isMentor) {
+	public UserSquad(User user, Squad squad, boolean isMentor, boolean isCreator) {
 		this.user = user;
 		this.squad = squad;
 		this.isMentor = isMentor;
+		this.isCreator = isCreator;
 	}
 
-	public static UserSquad createUserSquad(User user, Squad squad, boolean isMentor) {
+	public static UserSquad createUserSquad(User user, Squad squad, boolean isMentor, boolean isCreator) {
 		return UserSquad.builder()
 			.user(user)
 			.squad(squad)
 			.isMentor(isMentor)
+			.isCreator(isCreator)
 			.build();
 	}
 }
