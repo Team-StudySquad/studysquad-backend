@@ -15,6 +15,6 @@ public class SquadAlreadyFullException extends ApiException {
 
 	@Override
 	public int getStatusCode() {
-		return 0;
+		return 400;
 	}
 }
