@@ -11,11 +11,13 @@ import com.studysquad.global.error.exception.ExistActiveSquadException;
 import com.studysquad.global.error.exception.InvalidCategoryException;
 import com.studysquad.global.error.exception.MentorAlreadyExistException;
 import com.studysquad.global.error.exception.MentorRequiredException;
+import com.studysquad.global.error.exception.NotFoundProcessSquad;
 import com.studysquad.global.error.exception.SquadAlreadyFullException;
 import com.studysquad.global.error.exception.SquadNotFoundException;
 import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
+import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.repository.SquadRepository;
@@ -38,6 +40,14 @@ public class SquadService {
 	private final SquadRepository squadRepository;
 	private final UserSquadRepository userSquadRepository;
 	private final CategoryRepository categoryRepository;
+
+	public ProcessSquadDto getProcessSquad(LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		return squadRepository.getProcessSquad(user.getId())
+			.orElseThrow(NotFoundProcessSquad::new);
+	}
 
 	@Transactional
 	public void createSquad(SquadCreateDto createRequest, LoginUser loginUser) {
