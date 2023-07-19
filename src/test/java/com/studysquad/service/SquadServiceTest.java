@@ -19,11 +19,13 @@ import com.studysquad.global.error.exception.ExistActiveSquadException;
 import com.studysquad.global.error.exception.InvalidCategoryException;
 import com.studysquad.global.error.exception.MentorAlreadyExistException;
 import com.studysquad.global.error.exception.MentorRequiredException;
+import com.studysquad.global.error.exception.NotFoundProcessSquad;
 import com.studysquad.global.error.exception.SquadAlreadyFullException;
 import com.studysquad.global.error.exception.SquadNotFoundException;
 import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
+import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.repository.SquadRepository;
@@ -48,6 +50,59 @@ public class SquadServiceTest {
 	CategoryRepository categoryRepository;
 	@InjectMocks
 	SquadService squadService;
+
+	@Test
+	@DisplayName("진행중인 스쿼드 조회 성공")
+	void successGetProcessSquad() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		LoginUser loginUser = createLoginUser(user.getEmail());
+		ProcessSquadDto processSquadDto = ProcessSquadDto.builder()
+			.squadId(1L)
+			.categoryName("Java")
+			.squadName("Happy Java Squad")
+			.squadExplain("This squad study for java")
+			.build();
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.getProcessSquad(user.getId()))
+			.thenReturn(Optional.of(processSquadDto));
+
+		squadService.getProcessSquad(loginUser);
+
+		verify(userRepository).findByEmail(loginUser.getEmail());
+		verify(squadRepository).getProcessSquad(user.getId());
+	}
+
+	@Test
+	@DisplayName("유효하지 않은 사용자가 진행중인 스쿼드 조회 요청")
+	void failGetProcessSquadInvalidUser() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		LoginUser loginUser = createLoginUser(user.getEmail());
+
+		when(userRepository.findByEmail(user.getEmail()))
+			.thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> squadService.getProcessSquad(loginUser))
+			.isInstanceOf(UserNotFoundException.class)
+			.message().isEqualTo("사용자를 찾을 수 없습니다");
+	}
+
+	@Test
+	@DisplayName("진행중인 스쿼드가 존재하지 않음")
+	void failGetProcessSquadNotFoundProcessSquad() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		LoginUser loginUser = createLoginUser(user.getEmail());
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.getProcessSquad(user.getId()))
+			.thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> squadService.getProcessSquad(loginUser))
+			.isInstanceOf(NotFoundProcessSquad.class)
+			.message().isEqualTo("진행중인 스쿼드를 찾을 수 없습니다");
+	}
 
 	@Test
 	@DisplayName("스쿼드 생성")
