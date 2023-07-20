@@ -2,6 +2,7 @@ package com.studysquad.usersquad.domain;
 
 import static javax.persistence.FetchType.*;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,6 +25,7 @@ public class UserSquad {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "user_squad_id")
 	private Long id;
 	@ManyToOne(fetch = LAZY)
 	@JoinColumn(name = "user_id")
