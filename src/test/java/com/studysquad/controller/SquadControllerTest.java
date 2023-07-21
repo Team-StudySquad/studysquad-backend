@@ -25,6 +25,7 @@ import com.studysquad.category.domain.Category;
 import com.studysquad.category.repository.CategoryRepository;
 import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.squad.domain.Squad;
+import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.repository.SquadRepository;
@@ -297,6 +298,51 @@ public class SquadControllerTest {
 				.content(json))
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("스쿼드 내에 멘토가 필요합니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("진행중인 스쿼드 조회 성공")
+	void successGetProcessSquad() throws Exception {
+		User user1 = userRepository.findByEmail("aaa@aaa.com")
+			.orElseThrow(UserNotFoundException::new);
+		User user2 = userRepository.save(createUser("bbb@bbb.com"));
+		User user3 = userRepository.save(createUser("ccc@ccc.com"));
+		User user4 = userRepository.save(createUser("ddd@ddd.com"));
+
+		SquadCreateDto createDto = createSquadCreateDto();
+		Category category = categoryRepository.save(createCategory());
+		Squad squad = Squad.createSquad(category, createDto);
+		squad.updateStatus(SquadStatus.PROCESS);
+
+		squadRepository.save(squad);
+		userSquadRepository.save(UserSquad.createUserSquad(user1, squad, true, true));
+		userSquadRepository.save(UserSquad.createUserSquad(user2, squad, false, false));
+		userSquadRepository.save(UserSquad.createUserSquad(user3, squad, false, false));
+		userSquadRepository.save(UserSquad.createUserSquad(user4, squad, false, false));
+
+		mockMvc.perform(get("/api/squad/process")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("진행중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.squadId").value(squad.getId()))
+			.andExpect(jsonPath("$.data.categoryName").value(category.getCategoryName()))
+			.andExpect(jsonPath("$.data.squadName").value(squad.getSquadName()))
+			.andExpect(jsonPath("$.data.squadExplain").value(squad.getSquadExplain()))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("진행중인 스쿼드가 존재하지 않음")
+	void failGetProcessSquadNotFoundProcessSquad() throws Exception {
+		mockMvc.perform(get("/api/squad/process")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+			.andExpect(jsonPath("$.message").value("진행중인 스쿼드를 찾을 수 없습니다"))
 			.andDo(print());
 	}
 
