@@ -2,6 +2,8 @@ package com.studysquad.squad.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
+import com.studysquad.squad.dto.SquadResponseDto;
+import com.studysquad.squad.dto.SquadSearchCondition;
 import com.studysquad.squad.repository.SquadRepository;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.LoginUser;
@@ -47,6 +51,10 @@ public class SquadService {
 
 		return squadRepository.getProcessSquad(user.getId())
 			.orElseThrow(NotFoundProcessSquad::new);
+	}
+
+	public Page<SquadResponseDto> getRecruitSquads(SquadSearchCondition searchCondition, Pageable pageable) {
+		return squadRepository.searchSquadPageByCondition(searchCondition, pageable);
 	}
 
 	@Transactional
