@@ -4,15 +4,26 @@ import static com.studysquad.category.domain.QCategory.*;
 import static com.studysquad.squad.domain.QSquad.*;
 import static com.studysquad.usersquad.domain.QUserSquad.*;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.QProcessSquadDto;
+import com.studysquad.squad.dto.QSquadResponseDto;
+import com.studysquad.squad.dto.SquadResponseDto;
+import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.usersquad.domain.QUserSquad;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +34,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 
+	@Override
 	public Optional<ProcessSquadDto> getProcessSquad(Long userId) {
 		ProcessSquadDto result = queryFactory.select(new QProcessSquadDto(
 				squad.id,
@@ -37,5 +49,59 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.fetchOne();
 
 		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Page<SquadResponseDto> searchSquadPageByCondition(SquadSearchCondition searchCondition, Pageable pageable) {
+		QUserSquad userSquad = new QUserSquad("userSquad");
+		QUserSquad mentorUserSquad = new QUserSquad("mentorUserSquad");
+
+		List<SquadResponseDto> fetch = queryFactory
+			.select(new QSquadResponseDto(
+				squad.id,
+				userSquad.id.count().as("userCount"),
+				squad.squadName,
+				squad.squadExplain,
+				category.categoryName
+			))
+			.from(squad)
+			.join(userSquad).on(userSquad.squad.id.eq(squad.id))
+			.join(category).on(category.id.eq(squad.category.id))
+			.leftJoin(mentorUserSquad)
+			.on(mentorUserSquad.squad.id.eq(userSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
+			.where(squad.squadState.eq(SquadStatus.RECRUIT),
+				isMentorEq(mentorUserSquad, searchCondition.getMentor()),
+				categoryNameEq(searchCondition.getCategoryName()))
+			.groupBy(squad.id)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.orderBy(squad.id.asc())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(squad.count())
+			.from(squad)
+			.join(userSquad)
+			.on(userSquad.squad.id.eq(squad.id))
+			.join(category)
+			.on(category.id.eq(squad.category.id))
+			.leftJoin(mentorUserSquad)
+			.on(mentorUserSquad.squad.id.eq(userSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
+			.where(squad.squadState.eq(SquadStatus.RECRUIT),
+				isMentorEq(mentorUserSquad, searchCondition.getMentor()),
+				categoryNameEq(searchCondition.getCategoryName()));
+
+		return PageableExecutionUtils.getPage(fetch, pageable, countQuery::fetchOne);
+	}
+
+	private BooleanExpression categoryNameEq(String categoryName) {
+		return !StringUtils.hasText(categoryName) ? null : category.categoryName.eq(categoryName);
+	}
+
+	private BooleanExpression isMentorEq(QUserSquad mentorUserSquad, Boolean mentor) {
+		if (mentor == null) {
+			return null;
+		}
+		return mentor ? mentorUserSquad.isMentor.isNotNull() : mentorUserSquad.isMentor.isNull();
 	}
 }
