@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.studysquad.category.domain.Category;
 import com.studysquad.category.repository.CategoryRepository;
@@ -28,6 +34,8 @@ import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
+import com.studysquad.squad.dto.SquadResponseDto;
+import com.studysquad.squad.dto.SquadSearchCondition;
 import com.studysquad.squad.repository.SquadRepository;
 import com.studysquad.squad.service.SquadService;
 import com.studysquad.user.domain.Role;
@@ -102,6 +110,37 @@ public class SquadServiceTest {
 		assertThatThrownBy(() -> squadService.getProcessSquad(loginUser))
 			.isInstanceOf(NotFoundProcessSquad.class)
 			.message().isEqualTo("진행중인 스쿼드를 찾을 수 없습니다");
+	}
+
+	@Test
+	@DisplayName("모집중인 스쿼드 조회 성공")
+	void successGetRecruitSquads() {
+		SquadSearchCondition cond = SquadSearchCondition.builder()
+			.build();
+		PageRequest page = PageRequest.of(0, 10);
+
+		List<SquadResponseDto> testData = LongStream.range(1, 31)
+			.mapToObj(i -> SquadResponseDto.builder()
+				.squadId(i)
+				.userCount((long)3)
+				.squadName("스쿼드 이름 " + i)
+				.squadExplain("스쿼드 설명 " + i)
+				.categoryName("카테고리 명" + i)
+				.build())
+			.collect(Collectors.toList());
+
+		List<SquadResponseDto> expectedData = testData.subList(page.getPageNumber(), page.getPageSize());
+		Page<SquadResponseDto> expectedPage = new PageImpl<>(expectedData, page, expectedData.size());
+
+		when(squadRepository.searchSquadPageByCondition(cond, page))
+			.thenReturn(expectedPage);
+
+		Page<SquadResponseDto> responseData = squadService.getRecruitSquads(cond, page);
+
+		verify(squadRepository, times(1)).searchSquadPageByCondition(eq(cond), eq(page));
+		assertThat(responseData.getContent())
+			.hasSize(10)
+			.isEqualTo(expectedData);
 	}
 
 	@Test
