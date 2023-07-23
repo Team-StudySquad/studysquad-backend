@@ -2,6 +2,8 @@ package com.studysquad.squad.controller;
 
 import javax.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +17,8 @@ import com.studysquad.global.security.Login;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
+import com.studysquad.squad.dto.SquadResponseDto;
+import com.studysquad.squad.dto.SquadSearchCondition;
 import com.studysquad.squad.service.SquadService;
 import com.studysquad.user.dto.LoginUser;
 
@@ -35,6 +39,18 @@ public class SquadController {
 			.status(HttpStatus.OK.value())
 			.message("진행중인 스쿼드 조회 성공")
 			.data(responseData)
+			.build();
+	}
+
+	@GetMapping("/api/squad/recruit")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<Page<SquadResponseDto>> getRecruitSquads(SquadSearchCondition searchCondition,
+		Pageable pageable) {
+
+		return SuccessResponse.<Page<SquadResponseDto>>builder()
+			.status(HttpStatus.OK.value())
+			.message("모집중인 스쿼드 조회 성공")
+			.data(squadService.getRecruitSquads(searchCondition, pageable))
 			.build();
 	}
 
