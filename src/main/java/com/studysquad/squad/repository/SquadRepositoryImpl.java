@@ -2,6 +2,7 @@ package com.studysquad.squad.repository;
 
 import static com.studysquad.category.domain.QCategory.*;
 import static com.studysquad.squad.domain.QSquad.*;
+import static com.studysquad.user.domain.QUser.*;
 import static com.studysquad.usersquad.domain.QUserSquad.*;
 
 import java.util.List;
@@ -59,16 +60,21 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 		List<SquadResponseDto> fetch = queryFactory
 			.select(new QSquadResponseDto(
 				squad.id,
-				userSquad.id.count().as("userCount"),
+				userSquad.user.count().as("userCount"),
 				squad.squadName,
 				squad.squadExplain,
-				category.categoryName
+				category.categoryName,
+				user.nickname.max().as("creatorName")
 			))
 			.from(squad)
-			.join(userSquad).on(userSquad.squad.id.eq(squad.id))
-			.join(category).on(category.id.eq(squad.category.id))
+			.join(userSquad)
+			.on(squad.id.eq(userSquad.squad.id))
+			.join(category)
+			.on(squad.category.id.eq(category.id))
+			.leftJoin(user)
+			.on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
 			.leftJoin(mentorUserSquad)
-			.on(mentorUserSquad.squad.id.eq(userSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
+			.on(userSquad.squad.id.eq(mentorUserSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
 			.where(squad.squadState.eq(SquadStatus.RECRUIT),
 				isMentorEq(mentorUserSquad, searchCondition.getMentor()),
 				categoryNameEq(searchCondition.getCategoryName()))

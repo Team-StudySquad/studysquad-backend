@@ -16,15 +16,18 @@ public class SquadResponseDto {
 	private String squadName;
 	private String squadExplain;
 	private String categoryName;
+	private String creatorName;
 
 	@QueryProjection
 	@Builder
-	public SquadResponseDto(Long squadId, Long userCount, String squadName, String squadExplain, String categoryName) {
+	public SquadResponseDto(Long squadId, Long userCount, String squadName, String squadExplain, String categoryName,
+		String creatorName) {
 		this.squadId = squadId;
 		this.userCount = userCount;
 		this.squadName = squadName;
 		this.squadExplain = squadExplain;
 		this.categoryName = categoryName;
+		this.creatorName = creatorName;
 	}
 
 }
