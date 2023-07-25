@@ -57,6 +57,11 @@ public class SquadService {
 		return squadRepository.searchSquadPageByCondition(searchCondition, pageable);
 	}
 
+	public SquadResponseDto getSquad(Long squadId) {
+		return squadRepository.findSquadBySquadId(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+	}
+
 	@Transactional
 	public void createSquad(SquadCreateDto createRequest, LoginUser loginUser) {
 		User user = userRepository.findByEmail(loginUser.getEmail())

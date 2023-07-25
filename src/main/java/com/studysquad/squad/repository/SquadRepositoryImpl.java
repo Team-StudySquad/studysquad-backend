@@ -37,7 +37,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 
 	@Override
 	public Optional<ProcessSquadDto> getProcessSquad(Long userId) {
-		ProcessSquadDto result = queryFactory.select(new QProcessSquadDto(
+		ProcessSquadDto fetchOne = queryFactory.select(new QProcessSquadDto(
 				squad.id,
 				category.categoryName,
 				squad.squadName,
@@ -49,7 +49,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 				.and(userSquad.user.id.eq(userId)))
 			.fetchOne();
 
-		return Optional.ofNullable(result);
+		return Optional.ofNullable(fetchOne);
 	}
 
 	@Override
@@ -98,6 +98,26 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 				categoryNameEq(searchCondition.getCategoryName()));
 
 		return PageableExecutionUtils.getPage(fetch, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Optional<SquadResponseDto> findSquadBySquadId(Long squadId) {
+		SquadResponseDto fetchOne = queryFactory
+			.select(new QSquadResponseDto(
+				squad.id,
+				userSquad.user.count().as("userCount"),
+				squad.squadName,
+				squad.squadExplain,
+				category.categoryName,
+				user.nickname.max().as("creatorName")))
+			.from(squad)
+			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
+			.join(category).on(squad.category.id.eq(category.id))
+			.leftJoin(user).on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
+			.where(squad.id.eq(squadId).and(squad.squadState.eq(SquadStatus.RECRUIT)))
+			.groupBy(squad.id)
+			.fetchOne();
+		return Optional.ofNullable(fetchOne);
 	}
 
 	private BooleanExpression categoryNameEq(String categoryName) {

@@ -12,5 +12,7 @@ import com.studysquad.squad.dto.SquadSearchCondition;
 public interface SquadRepositoryCustom {
 	Optional<ProcessSquadDto> getProcessSquad(Long userId);
 
+	Optional<SquadResponseDto> findSquadBySquadId(Long squadId);
+
 	Page<SquadResponseDto> searchSquadPageByCondition(SquadSearchCondition searchCondition, Pageable pageable);
 }
