@@ -1,11 +1,14 @@
 package com.studysquad.controller;
 
+import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +31,7 @@ import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
+import com.studysquad.squad.dto.SquadSearchCondition;
 import com.studysquad.squad.repository.SquadRepository;
 import com.studysquad.user.domain.Role;
 import com.studysquad.user.domain.User;
@@ -54,7 +58,7 @@ public class SquadControllerTest {
 
 	@BeforeEach
 	void init() {
-		userRepository.save(createUser("aaa@aaa.com"));
+		userRepository.save(createUser("aaa@aaa.com", "nickname"));
 	}
 
 	@AfterEach
@@ -148,7 +152,7 @@ public class SquadControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("스쿼드 가입 성공")
 	void successJoinSquad() throws Exception {
-		User user = userRepository.save(createUser("bbb@bbb.com"));
+		User user = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
 		Squad squad = squadRepository.save(Squad.createSquad(category, createDto));
@@ -174,7 +178,7 @@ public class SquadControllerTest {
 	void failJoinSquadWithActiveSquad() throws Exception {
 		User userInActiveSquad = userRepository.findByEmail("aaa@aaa.com")
 			.orElseThrow(UserNotFoundException::new);
-		User user = userRepository.save(createUser("bbb@bbb.com"));
+		User user = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
 
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
@@ -221,10 +225,10 @@ public class SquadControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("모집 완료된 스쿼드에 가입")
 	void failJoinSquadAlreadyRecruitEnd() throws Exception {
-		User user1 = userRepository.save(createUser("bbb@bbb.com"));
-		User user2 = userRepository.save(createUser("ccc@ccc.com"));
-		User user3 = userRepository.save(createUser("ddd@ddd.com"));
-		User user4 = userRepository.save(createUser("eee@eee.com"));
+		User user1 = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
+		User user2 = userRepository.save(createUser("ccc@ccc.com", "nicknameC"));
+		User user3 = userRepository.save(createUser("ddd@ddd.com", "nicknameD"));
+		User user4 = userRepository.save(createUser("eee@eee.com", "nicknameE"));
 
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
@@ -253,7 +257,7 @@ public class SquadControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("멘토가 존재하는 스쿼드에 멘토로 가입")
 	void failJoinAsMentorToSquadWithMentor() throws Exception {
-		User user = userRepository.save(createUser("bbb@bbb.com"));
+		User user = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
 		Squad squad = squadRepository.save(Squad.createSquad(category, createDto));
@@ -276,9 +280,9 @@ public class SquadControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("멘티가 3명 존재하는 스쿼드에 멘티로 가입")
 	void failJoinSquadHasThreeMenteeInSquad() throws Exception {
-		User user1 = userRepository.save(createUser("bbb@bbb.com"));
-		User user2 = userRepository.save(createUser("ccc@ccc.com"));
-		User user3 = userRepository.save(createUser("ddd@ddd.com"));
+		User user1 = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
+		User user2 = userRepository.save(createUser("ccc@ccc.com", "nicknameC"));
+		User user3 = userRepository.save(createUser("ddd@ddd.com", "nicknameD"));
 
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
@@ -307,9 +311,9 @@ public class SquadControllerTest {
 	void successGetProcessSquad() throws Exception {
 		User user1 = userRepository.findByEmail("aaa@aaa.com")
 			.orElseThrow(UserNotFoundException::new);
-		User user2 = userRepository.save(createUser("bbb@bbb.com"));
-		User user3 = userRepository.save(createUser("ccc@ccc.com"));
-		User user4 = userRepository.save(createUser("ddd@ddd.com"));
+		User user2 = userRepository.save(createUser("bbb@bbb.com", "nicknameB"));
+		User user3 = userRepository.save(createUser("ccc@ccc.com", "nicknameC"));
+		User user4 = userRepository.save(createUser("ddd@ddd.com", "nicknameD"));
 
 		SquadCreateDto createDto = createSquadCreateDto();
 		Category category = categoryRepository.save(createCategory());
@@ -346,6 +350,123 @@ public class SquadControllerTest {
 			.andDo(print());
 	}
 
+	@Test
+	@DisplayName("모집중인 스쿼드 조회")
+	void successGetRecruitSquads() throws Exception {
+		List<User> users = getUsersData();
+		Category category = categoryRepository.save(createCategory());
+		List<Squad> squads = getSquadsData(category);
+		getUserSquadsData(users, squads);
+
+		mockMvc.perform(get("/api/squad/recruit")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("모집중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(5))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("멘토를 모집중인 스쿼드 조회")
+	void successGetRecruitMentorSquads() throws Exception {
+		List<User> users = getUsersData();
+		Category category = categoryRepository.save(createCategory());
+		List<Squad> squads = getSquadsData(category);
+		getUserSquadsData(users, squads);
+
+		SquadSearchCondition cond = SquadSearchCondition.builder()
+			.mentor(false)
+			.build();
+
+		mockMvc.perform(get("/api/squad/recruit")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10")
+				.param("mentor", String.valueOf(cond.getMentor())))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("모집중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(0))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("멘티를 모집중인 스쿼드 조회")
+	void successGetRecruitMenteeSquads() throws Exception {
+		List<User> users = getUsersData();
+		Category category = categoryRepository.save(createCategory());
+		List<Squad> squads = getSquadsData(category);
+		getUserSquadsData(users, squads);
+
+		SquadSearchCondition cond = SquadSearchCondition.builder()
+			.mentor(true)
+			.build();
+
+		mockMvc.perform(get("/api/squad/recruit")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10")
+				.param("mentor", String.valueOf(cond.getMentor())))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("모집중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(5))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("카테고리로 진행중인 스쿼드 조회")
+	void successGetRecruitSquadsWithCategory() throws Exception {
+		List<User> users = getUsersData();
+		Category category = categoryRepository.save(createCategory());
+		List<Squad> squads = getSquadsData(category);
+		getUserSquadsData(users, squads);
+
+		SquadSearchCondition cond = SquadSearchCondition.builder()
+			.categoryName("Java")
+			.build();
+
+		mockMvc.perform(get("/api/squad/recruit")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10")
+				.param("categoryName", cond.getCategoryName()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("모집중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(5))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("멘토와 카테고리로 진행중인 스쿼드 조회")
+	void successGetRecruitSquadsWithCategoryAndMentor() throws Exception {
+		List<User> users = getUsersData();
+		Category category = categoryRepository.save(createCategory());
+		List<Squad> squads = getSquadsData(category);
+		getUserSquadsData(users, squads);
+
+		SquadSearchCondition cond = SquadSearchCondition.builder()
+			.mentor(true)
+			.categoryName("Java")
+			.build();
+
+		mockMvc.perform(get("/api/squad/recruit")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10")
+				.param("categoryName", cond.getCategoryName())
+				.param("mentor", String.valueOf(cond.getMentor())))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("모집중인 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(5))
+			.andDo(print());
+	}
+
 	private SquadCreateDto createSquadCreateDto() {
 		return SquadCreateDto.builder()
 			.categoryName("Java")
@@ -355,9 +476,10 @@ public class SquadControllerTest {
 			.build();
 	}
 
-	private User createUser(String email) {
+	private User createUser(String email, String nickname) {
 		return User.builder()
 			.email(email)
+			.nickname(nickname)
 			.role(Role.USER)
 			.build();
 	}
@@ -366,5 +488,42 @@ public class SquadControllerTest {
 		return Category.builder()
 			.categoryName("Java")
 			.build();
+	}
+
+	private List<UserSquad> getUserSquadsData(List<User> users, List<Squad> squads) {
+		return IntStream.range(0, 15)
+			.mapToObj(i -> {
+				boolean isCreator = i % 3 == 0;
+				boolean isMentor = i % 3 == 0;
+
+				User user = users.get(i);
+				Squad squad = squads.get(i / 3);
+
+				return UserSquad.createUserSquad(user, squad, isMentor, isCreator);
+			})
+			.map(userSquadRepository::save)
+			.collect(toList());
+	}
+
+	private List<Squad> getSquadsData(Category category) {
+		return LongStream.range(0, 5)
+			.mapToObj(i -> {
+				SquadCreateDto createDto = SquadCreateDto.builder()
+					.categoryName(category.getCategoryName())
+					.squadName("squadName " + i)
+					.squadExplain("squadExplain " + i)
+					.mentor(true)
+					.build();
+				return Squad.createSquad(category, createDto);
+			})
+			.map(squadRepository::save)
+			.collect(toList());
+	}
+
+	private List<User> getUsersData() {
+		return LongStream.range(0, 15)
+			.mapToObj(i -> createUser(i + "@aaa.com", "nickname " + i))
+			.map(userRepository::save)
+			.collect(toList());
 	}
 }
