@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadResponseDto;
 import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.squad.dto.UserSquadResponseDto;
 
 public interface SquadRepositoryCustom {
 	Optional<ProcessSquadDto> getProcessSquad(Long userId);
@@ -15,4 +16,6 @@ public interface SquadRepositoryCustom {
 	Optional<SquadResponseDto> findSquadBySquadId(Long squadId);
 
 	Page<SquadResponseDto> searchSquadPageByCondition(SquadSearchCondition searchCondition, Pageable pageable);
+
+	Page<UserSquadResponseDto> getUserSquads(Long userId, Pageable pageable);
 }

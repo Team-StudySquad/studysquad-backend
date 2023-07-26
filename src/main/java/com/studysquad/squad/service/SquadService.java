@@ -24,6 +24,7 @@ import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.dto.SquadResponseDto;
 import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.squad.dto.UserSquadResponseDto;
 import com.studysquad.squad.repository.SquadRepository;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.dto.LoginUser;
@@ -60,6 +61,13 @@ public class SquadService {
 	public SquadResponseDto getSquad(Long squadId) {
 		return squadRepository.findSquadBySquadId(squadId)
 			.orElseThrow(SquadNotFoundException::new);
+	}
+
+	public Page<UserSquadResponseDto> getUserSquads(LoginUser loginUser, Pageable pageable) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		return squadRepository.getUserSquads(user.getId(), pageable);
 	}
 
 	@Transactional

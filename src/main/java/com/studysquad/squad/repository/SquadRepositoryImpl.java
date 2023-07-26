@@ -22,8 +22,10 @@ import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.QProcessSquadDto;
 import com.studysquad.squad.dto.QSquadResponseDto;
+import com.studysquad.squad.dto.QUserSquadResponseDto;
 import com.studysquad.squad.dto.SquadResponseDto;
 import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.squad.dto.UserSquadResponseDto;
 import com.studysquad.usersquad.domain.QUserSquad;
 
 import lombok.RequiredArgsConstructor;
@@ -49,6 +51,26 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 				.and(userSquad.user.id.eq(userId)))
 			.fetchOne();
 
+		return Optional.ofNullable(fetchOne);
+	}
+
+	@Override
+	public Optional<SquadResponseDto> findSquadBySquadId(Long squadId) {
+		SquadResponseDto fetchOne = queryFactory
+			.select(new QSquadResponseDto(
+				squad.id,
+				userSquad.user.count().as("userCount"),
+				squad.squadName,
+				squad.squadExplain,
+				category.categoryName,
+				user.nickname.max().as("creatorName")))
+			.from(squad)
+			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
+			.join(category).on(squad.category.id.eq(category.id))
+			.leftJoin(user).on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
+			.where(squad.id.eq(squadId).and(squad.squadState.eq(SquadStatus.RECRUIT)))
+			.groupBy(squad.id)
+			.fetchOne();
 		return Optional.ofNullable(fetchOne);
 	}
 
@@ -81,7 +103,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.groupBy(squad.id)
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
-			.orderBy(squad.id.asc())
+			.orderBy(squad.id.desc())
 			.fetch();
 
 		JPAQuery<Long> countQuery = queryFactory
@@ -101,23 +123,31 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 	}
 
 	@Override
-	public Optional<SquadResponseDto> findSquadBySquadId(Long squadId) {
-		SquadResponseDto fetchOne = queryFactory
-			.select(new QSquadResponseDto(
+	public Page<UserSquadResponseDto> getUserSquads(Long userId, Pageable pageable) {
+		List<UserSquadResponseDto> fetch = queryFactory
+			.select(new QUserSquadResponseDto(
 				squad.id,
-				userSquad.user.count().as("userCount"),
 				squad.squadName,
 				squad.squadExplain,
 				category.categoryName,
-				user.nickname.max().as("creatorName")))
+				squad.squadState
+			))
 			.from(squad)
 			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
 			.join(category).on(squad.category.id.eq(category.id))
-			.leftJoin(user).on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
-			.where(squad.id.eq(squadId).and(squad.squadState.eq(SquadStatus.RECRUIT)))
-			.groupBy(squad.id)
-			.fetchOne();
-		return Optional.ofNullable(fetchOne);
+			.where(userSquad.user.id.eq(userId))
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.orderBy(squad.id.desc())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(squad.count())
+			.from(squad)
+			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
+			.where(userSquad.user.id.eq(userId));
+
+		return PageableExecutionUtils.getPage(fetch, pageable, countQuery::fetchOne);
 	}
 
 	private BooleanExpression categoryNameEq(String categoryName) {
