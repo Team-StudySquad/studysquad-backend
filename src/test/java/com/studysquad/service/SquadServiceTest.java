@@ -144,6 +144,53 @@ public class SquadServiceTest {
 	}
 
 	@Test
+	@DisplayName("모집중인 스쿼드 단건 조회")
+	void successGetRecruitSquad() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		Category category = createCategory();
+		Squad squad = Squad.builder()
+			.category(category)
+			.squadName("squad")
+			.squadExplain("squad Explain")
+			.squadState(SquadStatus.RECRUIT)
+			.build();
+		SquadResponseDto responseDto = SquadResponseDto.builder()
+			.squadId(squad.getId())
+			.squadName(squad.getSquadName())
+			.squadExplain(squad.getSquadExplain())
+			.categoryName(category.getCategoryName())
+			.userCount(1L)
+			.creatorName(user.getNickname())
+			.build();
+
+		when(squadRepository.findSquadBySquadId(squad.getId()))
+			.thenReturn(Optional.of(responseDto));
+		SquadResponseDto result = squadService.getSquad(squad.getId());
+
+		verify(squadRepository, times(1)).findSquadBySquadId(squad.getId());
+		assertThat(result).isEqualTo(responseDto);
+		assertThat(result.getUserCount()).isEqualTo(1L);
+		assertThat(result.getSquadId()).isEqualTo(squad.getId());
+		assertThat(result.getSquadName()).isEqualTo(squad.getSquadName());
+		assertThat(result.getSquadExplain()).isEqualTo(squad.getSquadExplain());
+		assertThat(result.getCategoryName()).isEqualTo(category.getCategoryName());
+		assertThat(result.getCreatorName()).isEqualTo(user.getNickname());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 스쿼드 단건 조회")
+	void failGetNotFoundSquad() {
+		Long notFoundSquadId = 1000L;
+
+		when(squadRepository.findSquadBySquadId(notFoundSquadId))
+			.thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> squadService.getSquad(notFoundSquadId))
+			.isInstanceOf(SquadNotFoundException.class)
+			.message().isEqualTo("존재하지 않는 스쿼드 입니다");
+	}
+
+	@Test
 	@DisplayName("스쿼드 생성")
 	void successSquadCreate() {
 		User user = createUser("aaa@aaa.com", "nickname1");
