@@ -54,6 +54,17 @@ public class SquadController {
 			.build();
 	}
 
+	@GetMapping("/api/squad/{squadId}")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<SquadResponseDto> getSquad(@PathVariable Long squadId) {
+
+		return SuccessResponse.<SquadResponseDto>builder()
+			.status(HttpStatus.OK.value())
+			.message("스쿼드 단건 조회 성공")
+			.data(squadService.getSquad(squadId))
+			.build();
+	}
+
 	@PostMapping("/api/squad")
 	@ResponseStatus(HttpStatus.CREATED)
 	public SuccessResponse<Void> createSquad(@RequestBody @Valid SquadCreateDto createRequest,
