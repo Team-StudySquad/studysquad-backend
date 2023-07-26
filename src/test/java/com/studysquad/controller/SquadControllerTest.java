@@ -467,6 +467,61 @@ public class SquadControllerTest {
 			.andDo(print());
 	}
 
+	@Test
+	@DisplayName("모집중인 스쿼드 단건 조회")
+	void successGetRecruitSquad() throws Exception {
+		User user1 = userRepository.save(createUser("aaa@aaa.com", "nickname1"));
+		User user2 = userRepository.save(createUser("bbb@bbb.com", "nickname2"));
+		User user3 = userRepository.save(createUser("ccc@ccc.com", "nickname3"));
+		Category category = categoryRepository.save(createCategory());
+		Squad squad = squadRepository.save(Squad.builder()
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.squadState(SquadStatus.RECRUIT)
+			.category(category)
+			.build());
+		userSquadRepository.save(UserSquad.builder()
+			.user(user1)
+			.squad(squad)
+			.isCreator(true)
+			.isMentor(true)
+			.build());
+		userSquadRepository.save(UserSquad.builder()
+			.user(user2)
+			.squad(squad)
+			.isCreator(false)
+			.isMentor(false)
+			.build());
+		userSquadRepository.save(UserSquad.builder()
+			.user(user3)
+			.squad(squad)
+			.isCreator(false)
+			.isMentor(false)
+			.build());
+
+		mockMvc.perform(get("/api/squad/{squadId}", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드 단건 조회 성공"))
+			.andExpect(jsonPath("$.data.squadId").value(squad.getId()))
+			.andExpect(jsonPath("$.data.userCount").value(3))
+			.andExpect(jsonPath("$.data.squadName").value("squad"))
+			.andExpect(jsonPath("$.data.squadExplain").value("squadExplain"))
+			.andExpect(jsonPath("$.data.creatorName").value(user1.getNickname()))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 스쿼드 아이디로 조회")
+	void failGetRecruitSquadInvalidSquadId() throws Exception {
+		Long notFoundSquadId = 100L;
+		mockMvc.perform(get("/api/squad/{squadId}", notFoundSquadId)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound())
+			.andDo(print());
+	}
+
 	private SquadCreateDto createSquadCreateDto() {
 		return SquadCreateDto.builder()
 			.categoryName("Java")
