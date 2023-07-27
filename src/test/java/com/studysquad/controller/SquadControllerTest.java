@@ -522,6 +522,68 @@ public class SquadControllerTest {
 			.andDo(print());
 	}
 
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("사용자 스쿼드 조회")
+	void successGetUserSquads() throws Exception {
+		User user = userRepository.findByEmail("aaa@aaa.com")
+			.orElseThrow(UserNotFoundException::new);
+		Category category = categoryRepository.save(createCategory());
+		Squad squad1 = squadRepository.save(Squad.builder()
+			.category(category)
+			.squadName("squad1")
+			.squadExplain("squadExplain1")
+			.squadState(SquadStatus.END)
+			.build());
+		Squad squad2 = squadRepository.save(Squad.builder()
+			.category(category)
+			.squadName("squad2")
+			.squadExplain("squadExplain2")
+			.squadState(SquadStatus.PROCESS)
+			.build());
+		userSquadRepository.save(UserSquad.builder()
+			.user(user)
+			.squad(squad1)
+			.isCreator(true)
+			.isMentor(true)
+			.build());
+		userSquadRepository.save(UserSquad.builder()
+			.user(user)
+			.squad(squad2)
+			.isCreator(true)
+			.isCreator(true)
+			.build());
+
+		mockMvc.perform(get("/api/squads")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("사용자 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(2))
+			.andExpect(jsonPath("$.data.content[0].squadId").value(squad2.getId()))
+			.andExpect(jsonPath("$.data.content[0].squadName").value(squad2.getSquadName()))
+			.andExpect(jsonPath("$.data.content[0].squadExplain").value(squad2.getSquadExplain()))
+			.andExpect(jsonPath("$.data.content[0].squadStatus").value(squad2.getSquadState().toString()))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("사용자 스쿼드가 없는 상태로 조회")
+	void successGetUserSquadEmptyUserSquad() throws Exception {
+		mockMvc.perform(get("/api/squads")
+				.contentType(MediaType.APPLICATION_JSON)
+				.param("page", "0")
+				.param("size", "10"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("사용자 스쿼드 조회 성공"))
+			.andExpect(jsonPath("$.data.content.length()").value(0))
+			.andDo(print());
+	}
+
 	private SquadCreateDto createSquadCreateDto() {
 		return SquadCreateDto.builder()
 			.categoryName("Java")
