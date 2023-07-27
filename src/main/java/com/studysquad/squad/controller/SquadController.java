@@ -19,6 +19,7 @@ import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.dto.SquadResponseDto;
 import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.squad.dto.UserSquadResponseDto;
 import com.studysquad.squad.service.SquadService;
 import com.studysquad.user.dto.LoginUser;
 
@@ -29,6 +30,17 @@ import lombok.RequiredArgsConstructor;
 public class SquadController {
 
 	private final SquadService squadService;
+
+	@GetMapping("/api/squad/{squadId}")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<SquadResponseDto> getSquad(@PathVariable Long squadId) {
+
+		return SuccessResponse.<SquadResponseDto>builder()
+			.status(HttpStatus.OK.value())
+			.message("스쿼드 단건 조회 성공")
+			.data(squadService.getSquad(squadId))
+			.build();
+	}
 
 	@GetMapping("/api/squad/process")
 	@ResponseStatus(HttpStatus.OK)
@@ -54,14 +66,15 @@ public class SquadController {
 			.build();
 	}
 
-	@GetMapping("/api/squad/{squadId}")
+	@GetMapping("/api/squads")
 	@ResponseStatus(HttpStatus.OK)
-	public SuccessResponse<SquadResponseDto> getSquad(@PathVariable Long squadId) {
+	public SuccessResponse<Page<UserSquadResponseDto>> getUserSquads(@Login LoginUser loginUser,
+		Pageable pageable) {
 
-		return SuccessResponse.<SquadResponseDto>builder()
+		return SuccessResponse.<Page<UserSquadResponseDto>>builder()
 			.status(HttpStatus.OK.value())
-			.message("스쿼드 단건 조회 성공")
-			.data(squadService.getSquad(squadId))
+			.message("사용자 스쿼드 조회 성공")
+			.data(squadService.getUserSquads(loginUser, pageable))
 			.build();
 	}
 
