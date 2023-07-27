@@ -36,6 +36,7 @@ import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
 import com.studysquad.squad.dto.SquadResponseDto;
 import com.studysquad.squad.dto.SquadSearchCondition;
+import com.studysquad.squad.dto.UserSquadResponseDto;
 import com.studysquad.squad.repository.SquadRepository;
 import com.studysquad.squad.service.SquadService;
 import com.studysquad.user.domain.Role;
@@ -115,10 +116,8 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("모집중인 스쿼드 조회 성공")
 	void successGetRecruitSquads() {
-		SquadSearchCondition cond = SquadSearchCondition.builder()
-			.build();
+		SquadSearchCondition cond = SquadSearchCondition.builder().build();
 		PageRequest page = PageRequest.of(0, 10);
-
 		List<SquadResponseDto> testData = LongStream.range(1, 31)
 			.mapToObj(i -> SquadResponseDto.builder()
 				.squadId(i)
@@ -128,7 +127,6 @@ public class SquadServiceTest {
 				.categoryName("카테고리 명" + i)
 				.build())
 			.collect(Collectors.toList());
-
 		List<SquadResponseDto> expectedData = testData.subList(page.getPageNumber(), page.getPageSize());
 		Page<SquadResponseDto> expectedPage = new PageImpl<>(expectedData, page, expectedData.size());
 
@@ -188,6 +186,40 @@ public class SquadServiceTest {
 		assertThatThrownBy(() -> squadService.getSquad(notFoundSquadId))
 			.isInstanceOf(SquadNotFoundException.class)
 			.message().isEqualTo("존재하지 않는 스쿼드 입니다");
+	}
+
+	@Test
+	@DisplayName("사용자 스쿼드 조회")
+	void successGetUserSquads() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		PageRequest page = PageRequest.of(0, 10);
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.role(user.getRole())
+			.build();
+		List<UserSquadResponseDto> testData = LongStream.range(1, 31)
+			.mapToObj(i -> UserSquadResponseDto.builder()
+				.squadId(i)
+				.squadName("squad " + i)
+				.squadExplain("squadExplain " + i)
+				.categoryName("category")
+				.squadStatus(SquadStatus.END)
+				.build())
+			.collect(Collectors.toList());
+		List<UserSquadResponseDto> expectedData = testData.subList(page.getPageNumber(), page.getPageSize());
+		Page<UserSquadResponseDto> expectedPage = new PageImpl<>(expectedData, page, expectedData.size());
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.getUserSquads(user.getId(), page))
+			.thenReturn(expectedPage);
+
+		Page<UserSquadResponseDto> responseData = squadService.getUserSquads(loginUser, page);
+
+		verify(squadRepository, times(1)).getUserSquads(user.getId(), page);
+		assertThat(responseData.getContent())
+			.hasSize(10)
+			.isEqualTo(expectedData);
 	}
 
 	@Test
