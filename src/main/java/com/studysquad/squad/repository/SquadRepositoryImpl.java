@@ -19,7 +19,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.studysquad.squad.domain.SquadStatus;
+import com.studysquad.squad.dto.EndSquadDto;
 import com.studysquad.squad.dto.ProcessSquadDto;
+import com.studysquad.squad.dto.QEndSquadDto;
 import com.studysquad.squad.dto.QProcessSquadDto;
 import com.studysquad.squad.dto.QSquadResponseDto;
 import com.studysquad.squad.dto.QUserSquadResponseDto;
@@ -70,6 +72,23 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.leftJoin(user).on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
 			.where(squad.id.eq(squadId).and(squad.squadState.eq(SquadStatus.RECRUIT)))
 			.groupBy(squad.id)
+			.fetchOne();
+		return Optional.ofNullable(fetchOne);
+	}
+
+	@Override
+	public Optional<EndSquadDto> getEndSquad(Long squadId, Long userId) {
+		EndSquadDto fetchOne = queryFactory
+			.select(new QEndSquadDto(
+				squad.id,
+				squad.squadName,
+				squad.squadExplain,
+				category.categoryName))
+			.from(squad)
+			.join(category).on(squad.category.id.eq(category.id))
+			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
+			.where(squad.id.eq(squadId).and(userSquad.user.id.eq(userId))
+				.and(squad.squadState.eq(SquadStatus.END)))
 			.fetchOne();
 		return Optional.ofNullable(fetchOne);
 	}
