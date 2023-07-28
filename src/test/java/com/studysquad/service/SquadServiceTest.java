@@ -25,12 +25,14 @@ import com.studysquad.global.error.exception.ExistActiveSquadException;
 import com.studysquad.global.error.exception.InvalidCategoryException;
 import com.studysquad.global.error.exception.MentorAlreadyExistException;
 import com.studysquad.global.error.exception.MentorRequiredException;
+import com.studysquad.global.error.exception.NotFoundEndSquad;
 import com.studysquad.global.error.exception.NotFoundProcessSquad;
 import com.studysquad.global.error.exception.SquadAlreadyFullException;
 import com.studysquad.global.error.exception.SquadNotFoundException;
 import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
+import com.studysquad.squad.dto.EndSquadDto;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
@@ -220,6 +222,69 @@ public class SquadServiceTest {
 		assertThat(responseData.getContent())
 			.hasSize(10)
 			.isEqualTo(expectedData);
+	}
+
+	@Test
+	@DisplayName("종료된 스쿼드 단건 조회")
+	void successGetEndSquad() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		Category category = createCategory();
+		Squad squad = Squad.builder()
+			.category(category)
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.squadState(SquadStatus.END)
+			.build();
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.role(user.getRole())
+			.build();
+		EndSquadDto expectedData = EndSquadDto.builder()
+			.squadId(squad.getId())
+			.squadName(squad.getSquadName())
+			.squadExplain(squad.getSquadExplain())
+			.categoryName(category.getCategoryName())
+			.build();
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.getEndSquad(squad.getId(), user.getId()))
+			.thenReturn(Optional.of(expectedData));
+
+		EndSquadDto result = squadService.getEndSquad(squad.getId(), loginUser);
+
+		assertThat(result.getSquadId()).isEqualTo(expectedData.getSquadId());
+		assertThat(result.getSquadName()).isEqualTo(expectedData.getSquadName());
+		assertThat(result.getSquadExplain()).isEqualTo(expectedData.getSquadExplain());
+		assertThat(result.getCategoryName()).isEqualTo(expectedData.getCategoryName());
+		verify(squadRepository, times(1)).getEndSquad(squad.getId(), user.getId());
+	}
+
+	@Test
+	@DisplayName("해당 스쿼드에 속하지 않은 사용자가 종료된 스쿼드 조회")
+	void failGetEndSquadNotInSquad() {
+		User user = createUser("aaa@aaa.com", "nickname1");
+		Category category = createCategory();
+		Squad squad = Squad.builder()
+			.category(category)
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.squadState(SquadStatus.END)
+			.build();
+
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.role(user.getRole())
+			.build();
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.getEndSquad(squad.getId(), user.getId()))
+			.thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> squadService.getEndSquad(squad.getId(), loginUser))
+			.isInstanceOf(NotFoundEndSquad.class)
+			.message().isEqualTo("종료된 스쿼드를 찾을 수 없습니다");
 	}
 
 	@Test
