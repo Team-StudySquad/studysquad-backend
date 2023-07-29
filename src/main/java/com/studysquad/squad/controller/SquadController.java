@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.studysquad.global.common.SuccessResponse;
 import com.studysquad.global.security.Login;
+import com.studysquad.squad.dto.EndSquadDto;
 import com.studysquad.squad.dto.ProcessSquadDto;
 import com.studysquad.squad.dto.SquadCreateDto;
 import com.studysquad.squad.dto.SquadJoinDto;
@@ -51,6 +52,16 @@ public class SquadController {
 			.status(HttpStatus.OK.value())
 			.message("진행중인 스쿼드 조회 성공")
 			.data(responseData)
+			.build();
+	}
+
+	@GetMapping("/api/squad/end/{squadId}")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<EndSquadDto> getEndSquad(@PathVariable Long squadId, @Login LoginUser loginUser) {
+		return SuccessResponse.<EndSquadDto>builder()
+			.status(HttpStatus.OK.value())
+			.message("종료된 스쿼드 단건 조회 성공")
+			.data(squadService.getEndSquad(squadId, loginUser))
 			.build();
 	}
 
