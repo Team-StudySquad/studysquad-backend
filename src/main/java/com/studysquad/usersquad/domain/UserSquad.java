@@ -43,13 +43,4 @@ public class UserSquad {
 		this.isMentor = isMentor;
 		this.isCreator = isCreator;
 	}
-
-	public static UserSquad createUserSquad(User user, Squad squad, boolean isMentor, boolean isCreator) {
-		return UserSquad.builder()
-			.user(user)
-			.squad(squad)
-			.isMentor(isMentor)
-			.isCreator(isCreator)
-			.build();
-	}
 }
