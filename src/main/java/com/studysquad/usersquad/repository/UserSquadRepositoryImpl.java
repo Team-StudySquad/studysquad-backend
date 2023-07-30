@@ -25,8 +25,8 @@ public class UserSquadRepositoryImpl implements UserSquadRepositoryCustom {
 			.from(userSquad)
 			.innerJoin(userSquad.squad, squad)
 			.where(userSquad.user.id.eq(userId)
-				.and(squad.squadState.eq(SquadStatus.PROCESS)
-					.or(squad.squadState.eq(SquadStatus.RECRUIT))))
+				.and(squad.squadStatus.eq(SquadStatus.PROCESS)
+					.or(squad.squadStatus.eq(SquadStatus.RECRUIT))))
 			.fetchFirst();
 
 		return fetchOne != null;

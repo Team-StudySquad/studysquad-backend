@@ -49,7 +49,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.from(squad)
 			.join(squad.category, category)
 			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
-			.where(squad.squadState.eq(SquadStatus.PROCESS)
+			.where(squad.squadStatus.eq(SquadStatus.PROCESS)
 				.and(userSquad.user.id.eq(userId)))
 			.fetchOne();
 
@@ -70,7 +70,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
 			.join(category).on(squad.category.id.eq(category.id))
 			.leftJoin(user).on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
-			.where(squad.id.eq(squadId).and(squad.squadState.eq(SquadStatus.RECRUIT)))
+			.where(squad.id.eq(squadId).and(squad.squadStatus.eq(SquadStatus.RECRUIT)))
 			.groupBy(squad.id)
 			.fetchOne();
 		return Optional.ofNullable(fetchOne);
@@ -88,7 +88,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.join(category).on(squad.category.id.eq(category.id))
 			.join(userSquad).on(squad.id.eq(userSquad.squad.id))
 			.where(squad.id.eq(squadId).and(userSquad.user.id.eq(userId))
-				.and(squad.squadState.eq(SquadStatus.END)))
+				.and(squad.squadStatus.eq(SquadStatus.END)))
 			.fetchOne();
 		return Optional.ofNullable(fetchOne);
 	}
@@ -116,7 +116,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
 			.leftJoin(mentorUserSquad)
 			.on(userSquad.squad.id.eq(mentorUserSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
-			.where(squad.squadState.eq(SquadStatus.RECRUIT),
+			.where(squad.squadStatus.eq(SquadStatus.RECRUIT),
 				isMentorEq(mentorUserSquad, searchCondition.getMentor()),
 				categoryNameEq(searchCondition.getCategoryName()))
 			.groupBy(squad.id)
@@ -134,7 +134,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.on(category.id.eq(squad.category.id))
 			.leftJoin(mentorUserSquad)
 			.on(mentorUserSquad.squad.id.eq(userSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
-			.where(squad.squadState.eq(SquadStatus.RECRUIT),
+			.where(squad.squadStatus.eq(SquadStatus.RECRUIT),
 				isMentorEq(mentorUserSquad, searchCondition.getMentor()),
 				categoryNameEq(searchCondition.getCategoryName()));
 
@@ -149,7 +149,7 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 				squad.squadName,
 				squad.squadExplain,
 				category.categoryName,
-				squad.squadState
+				squad.squadStatus
 			))
 			.from(squad)
 			.join(userSquad).on(squad.id.eq(userSquad.squad.id))

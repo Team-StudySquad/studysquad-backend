@@ -91,8 +91,19 @@ public class SquadService {
 		Category category = categoryRepository.findByCategoryName(createRequest.getCategoryName())
 			.orElseThrow(InvalidCategoryException::new);
 
-		Squad squad = Squad.createSquad(category, createRequest);
-		UserSquad userSquad = UserSquad.createUserSquad(user, squad, createRequest.isMentor(), true);
+		Squad squad = Squad.builder()
+			.category(category)
+			.squadName(createRequest.getSquadName())
+			.squadExplain(createRequest.getSquadExplain())
+			.squadStatus(SquadStatus.RECRUIT)
+			.build();
+
+		UserSquad userSquad = UserSquad.builder()
+			.user(user)
+			.squad(squad)
+			.isMentor(createRequest.isMentor())
+			.isCreator(true)
+			.build();
 
 		squadRepository.save(squad);
 		userSquadRepository.save(userSquad);
@@ -119,11 +130,16 @@ public class SquadService {
 		if (!joinRequest.isMentor() && isMenteeCountExceeded(userSquads)) {
 			throw new MentorRequiredException();
 		}
-		UserSquad userSquad = UserSquad.createUserSquad(user, squad, joinRequest.isMentor(), false);
-
 		if (userSquads.size() >= UPDATE_SQUAD_SIZE) {
 			squad.updateStatus(SquadStatus.PROCESS);
 		}
+		UserSquad userSquad = UserSquad.builder()
+			.user(user)
+			.squad(squad)
+			.isMentor(joinRequest.isMentor())
+			.isCreator(false)
+			.build();
+
 		userSquadRepository.save(userSquad);
 	}
 
