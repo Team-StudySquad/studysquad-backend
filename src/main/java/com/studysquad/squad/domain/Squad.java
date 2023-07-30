@@ -15,7 +15,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import com.studysquad.category.domain.Category;
-import com.studysquad.squad.dto.SquadCreateDto;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,30 +38,20 @@ public class Squad {
 	private String squadExplain;
 
 	@Enumerated(EnumType.STRING)
-	private SquadStatus squadState;
+	private SquadStatus squadStatus;
 	private LocalDateTime createAt;
 
 	@Builder
-	public Squad(Category category, String squadName, String squadExplain, SquadStatus squadState,
+	public Squad(Category category, String squadName, String squadExplain, SquadStatus squadStatus,
 		LocalDateTime createAt) {
 		this.category = category;
 		this.squadName = squadName;
 		this.squadExplain = squadExplain;
-		this.squadState = squadState;
+		this.squadStatus = squadStatus;
 		this.createAt = createAt;
 	}
 
-	public static Squad createSquad(Category category, SquadCreateDto squadCreateDto) {
-		return Squad.builder()
-			.category(category)
-			.squadName(squadCreateDto.getSquadName())
-			.squadExplain(squadCreateDto.getSquadExplain())
-			.squadState(SquadStatus.RECRUIT)
-			.createAt(LocalDateTime.now())
-			.build();
-	}
-
 	public void updateStatus(SquadStatus status) {
-		this.squadState = status;
+		this.squadStatus = status;
 	}
 }
