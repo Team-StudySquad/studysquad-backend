@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -176,6 +177,43 @@ public class SquadControllerTest {
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("스쿼드 가입 성공"))
 			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("모집이 완료된 스쿼드의 상태 변경")
+	void successJoinSquadChangeSquadStatus() throws Exception {
+		userRepository.save(createUser("aaa@aaa.com", "userA"));
+
+		User userB = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		User userC = userRepository.save(createUser("ccc@ccc.com", "userC"));
+		User userD = userRepository.save(createUser("ddd@ddd.com", "userD"));
+
+		Category category = categoryRepository.save(createCategory("JAVA"));
+
+		Squad squad = squadRepository.save(createSquad(category,
+			"squad", "squadExplain", SquadStatus.RECRUIT));
+
+		userSquadRepository.save(createUserSquad(userB, squad, true, true));
+		userSquadRepository.save(createUserSquad(userC, squad, false, false));
+		userSquadRepository.save(createUserSquad(userD, squad, false, false));
+
+		SquadJoinDto request = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(post("/api/squad/{squadId}/join", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드 가입 성공"))
+			.andDo(print());
+
+		Optional<Squad> findSquad = squadRepository.findById(squad.getId());
+		assertThat(findSquad).isNotEmpty();
+		assertThat(findSquad.get().getSquadStatus()).isEqualTo(SquadStatus.PROCESS);
 	}
 
 	@Test
@@ -555,7 +593,7 @@ public class SquadControllerTest {
 			.andExpect(jsonPath("$.data.content[0].squadId").value(squad2.getId()))
 			.andExpect(jsonPath("$.data.content[0].squadName").value(squad2.getSquadName()))
 			.andExpect(jsonPath("$.data.content[0].squadExplain").value(squad2.getSquadExplain()))
-			.andExpect(jsonPath("$.data.content[0].squadStatus").value(squad2.getSquadState().toString()))
+			.andExpect(jsonPath("$.data.content[0].squadStatus").value(squad2.getSquadStatus().toString()))
 			.andDo(print());
 	}
 
@@ -637,7 +675,7 @@ public class SquadControllerTest {
 			.category(category)
 			.squadName(squadName)
 			.squadExplain(squadExplain)
-			.squadState(status)
+			.squadStatus(status)
 			.build();
 	}
 
@@ -675,7 +713,7 @@ public class SquadControllerTest {
 				.category(category)
 				.squadName(String.format("squad %d", i))
 				.squadExplain(String.format("squadExplain %d", i))
-				.squadState(SquadStatus.RECRUIT)
+				.squadStatus(SquadStatus.RECRUIT)
 				.build())
 			.map(squadRepository::save)
 			.collect(toList());
