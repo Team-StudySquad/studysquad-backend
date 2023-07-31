@@ -65,13 +65,13 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("진행중인 스쿼드 조회 성공")
 	void successGetProcessSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		LoginUser loginUser = createLoginUser(user.getEmail());
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
 		ProcessSquadDto processSquadDto = ProcessSquadDto.builder()
 			.squadId(1L)
-			.categoryName("Java")
-			.squadName("Happy Java Squad")
-			.squadExplain("This squad study for java")
+			.categoryName("JAVA")
+			.squadName("squad")
+			.squadExplain("squadExplain")
 			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
@@ -88,8 +88,8 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("유효하지 않은 사용자가 진행중인 스쿼드 조회 요청")
 	void failGetProcessSquadInvalidUser() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		LoginUser loginUser = createLoginUser(user.getEmail());
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(user.getEmail()))
 			.thenReturn(Optional.empty());
@@ -102,8 +102,8 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("진행중인 스쿼드가 존재하지 않음")
 	void failGetProcessSquadNotFoundProcessSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		LoginUser loginUser = createLoginUser(user.getEmail());
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -123,12 +123,13 @@ public class SquadServiceTest {
 		List<SquadResponseDto> testData = LongStream.range(1, 31)
 			.mapToObj(i -> SquadResponseDto.builder()
 				.squadId(i)
-				.userCount((long)3)
-				.squadName("스쿼드 이름 " + i)
-				.squadExplain("스쿼드 설명 " + i)
-				.categoryName("카테고리 명" + i)
+				.userCount(3L)
+				.squadName(String.format("스쿼드 이름 %d", i))
+				.squadExplain(String.format("스쿼드 설명 %d", i))
+				.categoryName(String.format("카테고리 이름 %d", i))
 				.build())
 			.collect(Collectors.toList());
+
 		List<SquadResponseDto> expectedData = testData.subList(page.getPageNumber(), page.getPageSize());
 		Page<SquadResponseDto> expectedPage = new PageImpl<>(expectedData, page, expectedData.size());
 
@@ -137,23 +138,18 @@ public class SquadServiceTest {
 
 		Page<SquadResponseDto> responseData = squadService.getRecruitSquads(cond, page);
 
-		verify(squadRepository, times(1)).searchSquadPageByCondition(eq(cond), eq(page));
 		assertThat(responseData.getContent())
 			.hasSize(10)
 			.isEqualTo(expectedData);
+		verify(squadRepository, times(1)).searchSquadPageByCondition(eq(cond), eq(page));
 	}
 
 	@Test
 	@DisplayName("모집중인 스쿼드 단건 조회")
 	void successGetRecruitSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		Category category = createCategory();
-		Squad squad = Squad.builder()
-			.category(category)
-			.squadName("squad")
-			.squadExplain("squad Explain")
-			.squadState(SquadStatus.RECRUIT)
-			.build();
+		User user = createUser("aaa@aaa.com", "userA");
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
 		SquadResponseDto responseDto = SquadResponseDto.builder()
 			.squadId(squad.getId())
 			.squadName(squad.getSquadName())
@@ -167,7 +163,6 @@ public class SquadServiceTest {
 			.thenReturn(Optional.of(responseDto));
 		SquadResponseDto result = squadService.getSquad(squad.getId());
 
-		verify(squadRepository, times(1)).findSquadBySquadId(squad.getId());
 		assertThat(result).isEqualTo(responseDto);
 		assertThat(result.getUserCount()).isEqualTo(1L);
 		assertThat(result.getSquadId()).isEqualTo(squad.getId());
@@ -175,6 +170,7 @@ public class SquadServiceTest {
 		assertThat(result.getSquadExplain()).isEqualTo(squad.getSquadExplain());
 		assertThat(result.getCategoryName()).isEqualTo(category.getCategoryName());
 		assertThat(result.getCreatorName()).isEqualTo(user.getNickname());
+		verify(squadRepository, times(1)).findSquadBySquadId(squad.getId());
 	}
 
 	@Test
@@ -193,18 +189,15 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("사용자 스쿼드 조회")
 	void successGetUserSquads() {
-		User user = createUser("aaa@aaa.com", "nickname1");
+		User user = createUser("aaa@aaa.com", "userA");
 		PageRequest page = PageRequest.of(0, 10);
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		LoginUser loginUser = createLoginUser(user);
 		List<UserSquadResponseDto> testData = LongStream.range(1, 31)
 			.mapToObj(i -> UserSquadResponseDto.builder()
 				.squadId(i)
-				.squadName("squad " + i)
-				.squadExplain("squadExplain " + i)
-				.categoryName("category")
+				.squadName(String.format("squad %d", i))
+				.squadExplain(String.format("squadExplain %d", i))
+				.categoryName("JAVA")
 				.squadStatus(SquadStatus.END)
 				.build())
 			.collect(Collectors.toList());
@@ -218,27 +211,19 @@ public class SquadServiceTest {
 
 		Page<UserSquadResponseDto> responseData = squadService.getUserSquads(loginUser, page);
 
-		verify(squadRepository, times(1)).getUserSquads(user.getId(), page);
 		assertThat(responseData.getContent())
 			.hasSize(10)
 			.isEqualTo(expectedData);
+		verify(squadRepository, times(1)).getUserSquads(user.getId(), page);
 	}
 
 	@Test
 	@DisplayName("종료된 스쿼드 단건 조회")
 	void successGetEndSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		Category category = createCategory();
-		Squad squad = Squad.builder()
-			.category(category)
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadState(SquadStatus.END)
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		User user = createUser("aaa@aaa.com", "userA");
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.END);
+		LoginUser loginUser = createLoginUser(user);
 		EndSquadDto expectedData = EndSquadDto.builder()
 			.squadId(squad.getId())
 			.squadName(squad.getSquadName())
@@ -263,19 +248,10 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("해당 스쿼드에 속하지 않은 사용자가 종료된 스쿼드 조회")
 	void failGetEndSquadNotInSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		Category category = createCategory();
-		Squad squad = Squad.builder()
-			.category(category)
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadState(SquadStatus.END)
-			.build();
-
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		User user = createUser("aaa@aaa.com", "userA");
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.END);
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -290,10 +266,15 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 생성")
 	void successSquadCreate() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		LoginUser loginUser = createLoginUser(user.getEmail());
-		Category category = createCategory();
-		SquadCreateDto createRequest = createSquadCreateDto(category.getCategoryName());
+		User user = createUser("aaa@aaa.com", "userA");
+		Category category = createCategory("JAVA");
+		LoginUser loginUser = createLoginUser(user);
+		SquadCreateDto createRequest = SquadCreateDto.builder()
+			.categoryName(category.getCategoryName())
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.mentor(true)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -314,13 +295,21 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 생성 시 로그인한 유저가 유효하지 않음")
 	void failCreateSquadUserNotFound() {
-		SquadCreateDto createRequest = createSquadCreateDto("Java");
-		LoginUser loginUser = createLoginUser("aaa@aaa.com");
+		SquadCreateDto createRequest = SquadCreateDto.builder()
+			.categoryName("JAVA")
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.mentor(true)
+			.build();
+		LoginUser invalidLoginUser = LoginUser.builder()
+			.email("invalid@aaa.com")
+			.role(Role.USER)
+			.build();
 
-		when(userRepository.findByEmail(loginUser.getEmail()))
+		when(userRepository.findByEmail(invalidLoginUser.getEmail()))
 			.thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> squadService.createSquad(createRequest, loginUser))
+		assertThatThrownBy(() -> squadService.createSquad(createRequest, invalidLoginUser))
 			.isInstanceOf(UserNotFoundException.class)
 			.message().isEqualTo("사용자를 찾을 수 없습니다");
 	}
@@ -328,9 +317,14 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 생성 시 이미 활성화된 스쿼드가 존재")
 	void failCreateSquadAlreadyExistProgressSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		SquadCreateDto createRequest = createSquadCreateDto("Java");
-		LoginUser loginUser = createLoginUser("aaa@aaa.com");
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
+		SquadCreateDto createRequest = SquadCreateDto.builder()
+			.categoryName("JAVA")
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.mentor(true)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -345,9 +339,14 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 생성 시 카테고리 이름이 유효하지 않음")
 	void failCreateSquadCategoryNotFound() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		SquadCreateDto createRequest = createSquadCreateDto("invalidName");
-		LoginUser loginUser = createLoginUser("aaa@aaa.com");
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
+		SquadCreateDto createRequest = SquadCreateDto.builder()
+			.categoryName("invalidName")
+			.squadName("squadName")
+			.squadExplain("squadExplain")
+			.mentor(true)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -364,18 +363,21 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 가입 성공")
 	void successJoinSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		User joinUser = createUser("bbb@bbb.com", "nickname2");
+		User user = createUser("aaa@aaa.com", "userA");
+		User joinUser = createUser("bbb@bbb.com", "userB");
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
+		Category category = createCategory("JAVA");
 
-		UserSquad userSquad = UserSquad.createUserSquad(user, squad, true, true);
-		UserSquad joinUserSquad = UserSquad.createUserSquad(user, squad, false, false);
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
 
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+		UserSquad userSquad = createUserSquad(user, squad, true, true);
+		UserSquad joinUserSquad = createUserSquad(joinUser, squad, false, false);
+
+		LoginUser loginUser = createLoginUser(user);
+
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -396,23 +398,25 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("스쿼드 인원이 모두 모집되면 스쿼드 상태를 PROCESS로 변경")
 	void successJoinSquadChangeToProcessWhenAllMembersRecruited() {
-		User user1 = createUser("aaa@aaa.com", "nickname1");
-		User user2 = createUser("bbb@bbb.com", "nickname2");
-		User user3 = createUser("ccc@ccc.com", "nickname3");
+		User userA = createUser("aaa@aaa.com", "userA");
+		User userB = createUser("bbb@bbb.com", "userB");
+		User userC = createUser("ccc@ccc.com", "userC");
+		User joinUser = createUser("ddd@ddd.com", "userD");
 
-		User joinUser = createUser("eee@eee.com", "nickname4");
+		Category category = createCategory("JAVA");
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
 
-		UserSquad userSquad1 = UserSquad.createUserSquad(user1, squad, true, true);
-		UserSquad userSquad2 = UserSquad.createUserSquad(user2, squad, false, false);
-		UserSquad userSquad3 = UserSquad.createUserSquad(user3, squad, false, false);
-		UserSquad joinUserSquad = UserSquad.createUserSquad(joinUser, squad, false, false);
+		UserSquad userSquadA = createUserSquad(userA, squad, true, true);
+		UserSquad userSquadB = createUserSquad(userB, squad, false, false);
+		UserSquad userSquadC = createUserSquad(userC, squad, false, false);
+		UserSquad joinUserSquad = createUserSquad(joinUser, squad, false, false);
 
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+		LoginUser loginUser = createLoginUser(joinUser);
+
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -421,27 +425,27 @@ public class SquadServiceTest {
 		when(squadRepository.findById(squad.getId()))
 			.thenReturn(Optional.of(squad));
 		when(userSquadRepository.findBySquadId(squad.getId()))
-			.thenReturn(Arrays.asList(userSquad1, userSquad2, userSquad3));
+			.thenReturn(Arrays.asList(userSquadA, userSquadB, userSquadC));
 		when(userSquadRepository.save(any(UserSquad.class)))
 			.thenReturn(joinUserSquad);
 
 		squadService.joinSquad(joinRequest, squad.getId(), loginUser);
 
-		assertThat(squad.getSquadState()).isEqualTo(SquadStatus.PROCESS);
+		assertThat(squad.getSquadStatus()).isEqualTo(SquadStatus.PROCESS);
 		verify(userSquadRepository, times(1)).save(any(UserSquad.class));
 	}
 
 	@Test
 	@DisplayName("스쿼드 가입 시 활성화 된 스쿼드가 존재")
 	void failJoinSquadAlreadyActiveSquad() {
-		User user = createUser("aaa@aaa.com", "nickname1");
+		User user = createUser("aaa@aaa.com", "userA");
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
+		LoginUser loginUser = createLoginUser(user);
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
-
-		LoginUser loginUser = createLoginUser(user.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -456,11 +460,13 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 스쿼드로 가입 신청")
 	void failJoinSquadWithNotFoundSquad() {
-		User joinUser = createUser("bbb@bbb.com", "nickname2");
-
 		Long notFoundSquadId = 100L;
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+
+		User joinUser = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(joinUser);
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -477,24 +483,27 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("모집완료된 스쿼드에 가입 신청")
 	void failJoinSquadAlreadyRecruitCompletedSquad() {
-		User user1 = createUser("aaa@aaa.com", "nickname1");
-		User user2 = createUser("bbb@bbb.com", "nickname2");
-		User user3 = createUser("ccc@ccc.com", "nickname3");
-		User user4 = createUser("ddd@ddd.com", "nickname4");
+		User userA = createUser("aaa@aaa.com", "userA");
+		User userB = createUser("bbb@bbb.com", "userB");
+		User userC = createUser("ccc@ccc.com", "userC");
+		User userD = createUser("ddd@ddd.com", "userD");
 
-		User joinUser = createUser("eee@eee.com", "nickname5");
+		User joinUser = createUser("joinUser@aaa.com", "joinUser");
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
+		Category category = createCategory("JAVA");
 
-		UserSquad userSquad1 = UserSquad.createUserSquad(user1, squad, true, true);
-		UserSquad userSquad2 = UserSquad.createUserSquad(user2, squad, false, false);
-		UserSquad userSquad3 = UserSquad.createUserSquad(user3, squad, false, false);
-		UserSquad userSquad4 = UserSquad.createUserSquad(user4, squad, false, false);
+		Squad squad = createSquad(category, "squadName", "squadExplain", SquadStatus.PROCESS);
 
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+		UserSquad userSquadA = createUserSquad(userA, squad, true, true);
+		UserSquad userSquadB = createUserSquad(userB, squad, false, false);
+		UserSquad userSquadC = createUserSquad(userC, squad, false, false);
+		UserSquad userSquadD = createUserSquad(userD, squad, false, false);
+
+		LoginUser loginUser = createLoginUser(joinUser);
+
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -503,7 +512,7 @@ public class SquadServiceTest {
 		when(squadRepository.findById(squad.getId()))
 			.thenReturn(Optional.of(squad));
 		when(userSquadRepository.findBySquadId(squad.getId()))
-			.thenReturn(Arrays.asList(userSquad1, userSquad2, userSquad3, userSquad4));
+			.thenReturn(Arrays.asList(userSquadA, userSquadB, userSquadC, userSquadD));
 
 		assertThatThrownBy(() -> squadService.joinSquad(joinRequest, squad.getId(), loginUser))
 			.isInstanceOf(SquadAlreadyFullException.class)
@@ -513,17 +522,19 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("멘토가 있는 스쿼드에 멘토로 가입")
 	void failJoinSquadMentorAlreadyExist() {
-		User user = createUser("aaa@aaa.com", "nickname1");
-		User joinUser = createUser("bbb@bbb.com", "nickname2");
+		User user = createUser("aaa@aaa.com", "userA");
+		User joinUser = createUser("joinUser@aaa.com", "joinUser");
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
 
-		UserSquad userSquad = UserSquad.createUserSquad(user, squad, true, true);
+		UserSquad userSquad = createUserSquad(user, squad, true, true);
 
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(true);
+		LoginUser loginUser = createLoginUser(joinUser);
+
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(true)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -542,22 +553,24 @@ public class SquadServiceTest {
 	@Test
 	@DisplayName("멘티가 3명인 스쿼드에 멘티로 가입")
 	void failJoinSquadWithHasThreeMenteeInSquad() {
-		User user1 = createUser("aaa@aaa.com", "nickname1");
-		User user2 = createUser("bbb@bbb.com", "nickname2");
-		User user3 = createUser("ccc@ccc.com", "nickname3");
+		User userA = createUser("aaa@aaa.com", "userA");
+		User userB = createUser("bbb@bbb.com", "userB");
+		User userC = createUser("ccc@ccc.com", "userC");
+		User joinUser = createUser("joinUser@aaa.com", "joinUser");
 
-		User joinUser = createUser("ddd@ddd.com", "nickname4");
+		Category category = createCategory("JAVA");
 
-		Category category = createCategory();
-		SquadCreateDto createDto = createSquadCreateDto(category.getCategoryName());
-		Squad squad = Squad.createSquad(category, createDto);
+		Squad squad = createSquad(category, "squad", "squadExplain", SquadStatus.RECRUIT);
 
-		UserSquad userSquad1 = UserSquad.createUserSquad(user1, squad, false, true);
-		UserSquad userSquad2 = UserSquad.createUserSquad(user2, squad, false, false);
-		UserSquad userSquad3 = UserSquad.createUserSquad(user3, squad, false, false);
+		UserSquad userSquadA = createUserSquad(userA, squad, false, true);
+		UserSquad userSquadB = createUserSquad(userB, squad, false, false);
+		UserSquad userSquadC = createUserSquad(userC, squad, false, false);
 
-		LoginUser loginUser = createLoginUser(joinUser.getEmail());
-		SquadJoinDto joinRequest = createJoinDto(false);
+		LoginUser loginUser = createLoginUser(joinUser);
+
+		SquadJoinDto joinRequest = SquadJoinDto.builder()
+			.mentor(false)
+			.build();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(joinUser));
@@ -566,47 +579,49 @@ public class SquadServiceTest {
 		when(squadRepository.findById(squad.getId()))
 			.thenReturn(Optional.of(squad));
 		when(userSquadRepository.findBySquadId(squad.getId()))
-			.thenReturn(Arrays.asList(userSquad1, userSquad2, userSquad3));
+			.thenReturn(Arrays.asList(userSquadA, userSquadB, userSquadC));
 
 		assertThatThrownBy(() -> squadService.joinSquad(joinRequest, squad.getId(), loginUser))
 			.isInstanceOf(MentorRequiredException.class)
 			.message().isEqualTo("스쿼드 내에 멘토가 필요합니다");
 	}
 
-	private SquadCreateDto createSquadCreateDto(String categoryName) {
-		return SquadCreateDto.builder()
-			.categoryName(categoryName)
-			.squadName("squadName")
-			.squadExplain("this squad ...")
-			.mentor(true)
-			.build();
-	}
-
-	private Category createCategory() {
-		return Category.builder()
-			.categoryName("Java")
-			.build();
-	}
-
-	private LoginUser createLoginUser(String email) {
-		return LoginUser.builder()
-			.email(email)
-			.role(Role.USER)
-			.build();
-	}
-
 	private User createUser(String email, String nickname) {
 		return User.builder()
 			.email(email)
 			.nickname(nickname)
-			.password("password")
 			.role(Role.USER)
 			.build();
 	}
 
-	private SquadJoinDto createJoinDto(boolean isMentor) {
-		return SquadJoinDto.builder()
-			.mentor(isMentor)
+	private LoginUser createLoginUser(User user) {
+		return LoginUser.builder()
+			.email(user.getEmail())
+			.role(user.getRole())
+			.build();
+	}
+
+	private Category createCategory(String categoryName) {
+		return Category.builder()
+			.categoryName(categoryName)
+			.build();
+	}
+
+	private Squad createSquad(Category category, String squadName, String squadExplain, SquadStatus status) {
+		return Squad.builder()
+			.category(category)
+			.squadName(squadName)
+			.squadExplain(squadExplain)
+			.squadStatus(status)
+			.build();
+	}
+
+	private UserSquad createUserSquad(User user, Squad squad, boolean isMentor, boolean isCreator) {
+		return UserSquad.builder()
+			.user(user)
+			.squad(squad)
+			.isMentor(isMentor)
+			.isCreator(isCreator)
 			.build();
 	}
 }
