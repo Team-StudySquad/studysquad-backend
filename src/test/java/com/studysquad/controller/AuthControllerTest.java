@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.global.security.JwtProvider;
@@ -113,15 +112,14 @@ public class AuthControllerTest {
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("로그인 성공 후 RefreshToken 생성")
 	void afterSuccessLoginCreateRefreshTokenForUser() throws Exception {
-		User user = userRepository.save(createUser());
-
+		User user = createUser();
 		LoginRequestDto login = LoginRequestDto.builder()
 			.email("aaa@aaa.com")
 			.password("1234")
 			.build();
+		userRepository.save(user);
 
 		String json = objectMapper.writeValueAsString(login);
 
@@ -131,7 +129,9 @@ public class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andDo(print());
 
-		assertThat(user.getRefreshToken()).isNotNull();
+		Optional<User> findUser = userRepository.findById(user.getId());
+		assertThat(findUser).isNotEmpty();
+		assertThat(findUser.get().getRefreshToken()).isNotNull();
 	}
 
 	@Test
@@ -194,7 +194,6 @@ public class AuthControllerTest {
 			.andExpect(jsonPath("$.message").value("아이디/비밀번호가 일치하지 않습니다"))
 			.andExpect(jsonPath("$.validation").isEmpty())
 			.andDo(print());
-
 	}
 
 	@Test
@@ -432,13 +431,14 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("토큰 재발급 성공")
-	@Transactional
+		// @Transactional
 	void successfulReissueToken() throws Exception {
-		User user = userRepository.save(createUser());
+		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
 		RefreshToken refreshToken = token.getRefreshToken();
-
 		user.updateRefreshToken(refreshToken.getData());
+
+		userRepository.save(user);
 
 		Cookie requestCookie = new Cookie(refreshToken.getHeader(), refreshToken.getData());
 
@@ -491,13 +491,14 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("존재하지 않는 사용자 정보를 가지고 요청시 실패 응답 바디 리턴")
-	@Transactional
+		// @Transactional
 	void failReissueExistTokenReturnFailResponseBody() throws Exception {
-		User user = userRepository.save(createUser());
+		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
 		RefreshToken refreshToken = token.getRefreshToken();
-
 		user.updateRefreshToken("refreshToken");
+
+		userRepository.save(user);
 
 		Cookie requestCookie = new Cookie(refreshToken.getHeader(), refreshToken.getData());
 
@@ -521,12 +522,13 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("로그아웃 성공")
-	@Transactional
-	void SuccessLogout() throws Exception {
-		User user = userRepository.save(createUser());
+		// @Transactional
+	void successLogout() throws Exception {
+		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
-
 		user.updateRefreshToken(token.getRefreshToken().getData());
+
+		userRepository.save(user);
 
 		mockMvc.perform(post("/api/logout")
 				.header(token.getAccessToken().getHeader(), "Bearer " + token.getAccessToken().getData()))
@@ -536,7 +538,10 @@ public class AuthControllerTest {
 			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 
-		assertThat(user.getRefreshToken()).isNull();
+		Optional<User> findUser = userRepository.findById(user.getId());
+		// assertThat(user.getRefreshToken()).isNull();
+		assertThat(findUser).isNotEmpty();
+		assertThat(findUser.get().getRefreshToken()).isNull();
 	}
 
 	@Test
