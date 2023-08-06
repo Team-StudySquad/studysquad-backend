@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
 import com.studysquad.board.domain.Board;
+import com.studysquad.mission.dto.MissionEditDto;
 import com.studysquad.squad.domain.Squad;
 
 import lombok.AccessLevel;
@@ -51,5 +52,10 @@ public class Mission {
 		this.missionSequence = missionSequence;
 		this.squad = squad;
 		this.board = board;
+	}
+
+	public void edit(MissionEditDto editRequest) {
+		this.missionTitle = editRequest.getMissionTitle();
+		this.missionContent = editRequest.getMissionContent();
 	}
 }
