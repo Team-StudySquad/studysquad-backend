@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.dto.MissionCreateDto;
+import com.studysquad.mission.dto.MissionEditDto;
 import com.studysquad.mission.repository.MissionRepository;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
@@ -64,26 +65,16 @@ public class MissionControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("미션 생성 성공")
 	void successCreateMission() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build());
-		Squad squad = squadRepository.save(Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
 		MissionCreateDto createRequest = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
-		userSquadRepository.save(UserSquad.builder()
-			.user(user)
-			.squad(squad)
-			.isMentor(true)
-			.isCreator(true)
-			.build());
 
 		String json = objectMapper.writeValueAsString(Collections.singletonList(createRequest));
 
@@ -105,28 +96,18 @@ public class MissionControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("미션 순서가 0인 미션의 상태는 PROGRESS 이다")
 	void successCreateMissionWithSequenceZero() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build());
-		Squad squad = squadRepository.save(Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
 		List<MissionCreateDto> missionCreateDtoList = IntStream.range(0, 5)
 			.mapToObj(i -> MissionCreateDto.builder()
-				.missionTitle(String.format("missionTitle %d", i))
-				.missionContent(String.format("missionContent %d", i))
+				.missionTitle(String.format("title%d", i))
+				.missionContent(String.format("content%d", i))
 				.missionSequence(i)
 				.build())
 			.collect(Collectors.toList());
-		userSquadRepository.save(UserSquad.builder()
-			.user(user)
-			.squad(squad)
-			.isMentor(true)
-			.isCreator(true)
-			.build());
 
 		String json = objectMapper.writeValueAsString(missionCreateDtoList);
 
@@ -139,6 +120,7 @@ public class MissionControllerTest {
 			.andDo(print());
 
 		List<Mission> missions = missionRepository.findAll();
+
 		assertThat(missions).hasSize(5);
 		assertThat(missions)
 			.filteredOn(m -> m.getMissionSequence() == 0)
@@ -154,25 +136,14 @@ public class MissionControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("진행중인 스쿼드만 미션을 생성할 수 있다")
 	void failCreateSquadNotProcessSquad() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build());
-		Squad squad = squadRepository.save(Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.RECRUIT)
-			.build());
-		userSquadRepository.save(UserSquad.builder()
-			.user(user)
-			.squad(squad)
-			.isMentor(true)
-			.isCreator(true)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.RECRUIT));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
 
 		MissionCreateDto createRequest = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
 
@@ -191,37 +162,16 @@ public class MissionControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("미션 생성은 멘토만 할 수 있다")
 	void failCreateMissionWithMentee() throws Exception {
-		User mentee = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.role(Role.USER)
-			.build());
-		User mentor = userRepository.save(User.builder()
-			.email("bbb@bbb.com")
-			.nickname("userB")
-			.role(Role.USER)
-			.build());
-		Squad squad = squadRepository.save(Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build());
-		userSquadRepository.save(UserSquad.builder()
-			.user(mentor)
-			.squad(squad)
-			.isMentor(true)
-			.isCreator(true)
-			.build());
-		userSquadRepository.save(UserSquad.builder()
-			.user(mentee)
-			.squad(squad)
-			.isMentor(false)
-			.isCreator(false)
-			.build());
+		User mentee = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		User mentor = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(mentor, squad, true, true));
+		userSquadRepository.save(createUserSquad(mentee, squad, false, false));
 
 		MissionCreateDto createRequest = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
 
@@ -234,5 +184,175 @@ public class MissionControllerTest {
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("멘토가 아닌 사용자 입니다"))
 			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("미션 수정 성공")
+	void successEditMission() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+		Mission mission = missionRepository.save(createMission(squad, 0, MissionStatus.NOT_PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		MissionEditDto editRequest = MissionEditDto.builder()
+			.missionTitle("editTitle")
+			.missionContent("editContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(editRequest);
+
+		mockMvc.perform(patch("/api/squad/{squadId}/mission/{missionId}", squad.getId(), mission.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("미션 수정 성공"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("존재하지 않는 미션")
+	void failEditMissionNotFoundMission() throws Exception {
+		Long notFoundMissionId = 1L;
+
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		MissionEditDto editRequest = MissionEditDto.builder()
+			.missionTitle("editTitle")
+			.missionContent("editContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(editRequest);
+
+		mockMvc.perform(patch("/api/squad/{squadId}/mission/{missionId}", squad.getId(),
+				notFoundMissionId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+			.andExpect(jsonPath("$.message").value("미션을 찾을 수 없습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("미진행중인 스쿼드에서 미션 수정")
+	void failEditMissionNotProcessSquad() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.END));
+		Mission mission = missionRepository.save(createMission(squad, 0, MissionStatus.NOT_PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		MissionEditDto editRequest = MissionEditDto.builder()
+			.missionTitle("editTitle")
+			.missionContent("editContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(editRequest);
+
+		mockMvc.perform(patch("/api/squad/{squadId}/mission/{missionId}", squad.getId(), mission.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드가 진행중이지 않습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("멘토가 아닌 사용자가 미션 수정")
+	void failEditMissionWithNotMentor() throws Exception {
+		User mentee = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		User mentor = userRepository.save(createUser("bbb@bbb.com", "userB"));
+
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+		Mission mission = missionRepository.save(createMission(squad, 0, MissionStatus.NOT_PROCESS));
+
+		userSquadRepository.save(createUserSquad(mentor, squad, true, true));
+		userSquadRepository.save(createUserSquad(mentee, squad, false, false));
+
+		MissionEditDto editRequest = MissionEditDto.builder()
+			.missionTitle("editTitle")
+			.missionContent("editContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(editRequest);
+
+		mockMvc.perform(patch("/api/squad/{squadId}/mission/{missionId}", squad.getId(), mission.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("멘토가 아닌 사용자 입니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("진행중인 미션 수정")
+	void failEditMissionWithProcessMission() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+		Mission mission = missionRepository.save(createMission(squad, 0, MissionStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		MissionEditDto editRequest = MissionEditDto.builder()
+			.missionTitle("editTitle")
+			.missionContent("editContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(editRequest);
+
+		mockMvc.perform(patch("/api/squad/{squadId}/mission/{missionId}", squad.getId(), mission.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("진행중인 미션 입니다"))
+			.andDo(print());
+	}
+
+	private User createUser(String email, String nickname) {
+		return User.builder()
+			.email(email)
+			.nickname(nickname)
+			.role(Role.USER)
+			.build();
+	}
+
+	private UserSquad createUserSquad(User user, Squad squad, boolean isMentor, boolean isCreator) {
+		return UserSquad.builder()
+			.user(user)
+			.squad(squad)
+			.isMentor(isMentor)
+			.isCreator(isCreator)
+			.build();
+	}
+
+	private Squad createSquad(SquadStatus status) {
+		return Squad.builder()
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.squadStatus(status)
+			.build();
+	}
+
+	private Mission createMission(Squad squad, int sequence, MissionStatus status) {
+		return Mission.builder()
+			.squad(squad)
+			.missionTitle("title" + sequence)
+			.missionContent("content" + sequence)
+			.missionSequence(sequence)
+			.missionStatus(status)
+			.build();
 	}
 }
