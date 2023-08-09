@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.studysquad.global.error.exception.MissionNotFoundException;
 import com.studysquad.global.error.exception.NotMentorException;
+import com.studysquad.global.error.exception.NotSquadUserException;
 import com.studysquad.global.error.exception.ProcessMissionException;
 import com.studysquad.global.error.exception.SquadNotFoundException;
 import com.studysquad.global.error.exception.SquadNotProgressException;
@@ -16,6 +17,7 @@ import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.dto.MissionCreateDto;
 import com.studysquad.mission.dto.MissionEditDto;
+import com.studysquad.mission.dto.MissionResponseDto;
 import com.studysquad.mission.repository.MissionRepository;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
@@ -34,6 +36,17 @@ public class MissionService {
 	private final MissionRepository missionRepository;
 	private final UserRepository userRepository;
 	private final SquadRepository squadRepository;
+
+	public List<MissionResponseDto> getMissions(Long squadId, LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		validateUserIsMemberOfSquad(squad, user);
+
+		return missionRepository.getMissions(squad.getId());
+	}
 
 	@Transactional
 	public void createMission(Long squadId, List<MissionCreateDto> createRequest, LoginUser loginUser) {
@@ -66,6 +79,12 @@ public class MissionService {
 			throw new ProcessMissionException();
 		}
 		mission.edit(editRequest);
+	}
+
+	private void validateUserIsMemberOfSquad(Squad squad, User user) {
+		if (!squadRepository.isUserOfSquad(squad.getId(), user.getId())) {
+			throw new NotSquadUserException();
+		}
 	}
 
 	private void validateProcessSquad(Squad squad) {
