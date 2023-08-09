@@ -63,6 +63,45 @@ public class MissionControllerTest {
 
 	@Test
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("미션 리스트 조회 성공")
+	void successGetMissions() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+		missionRepository.saveAll(IntStream.range(0, 5)
+			.mapToObj(i -> createMission(squad, i, MissionStatus.NOT_PROCESS))
+			.collect(Collectors.toList()));
+
+		mockMvc.perform(get("/api/squad/{squadId}/missions", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("미션 리스트 조회 성공"))
+			.andExpect(jsonPath("$.data.length()").value(5))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("스쿼드에 속하지 않은 사용자가 미션 리스트 조회")
+	void failGetMissionsWithUserNotInSquad() throws Exception {
+		User user = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userRepository.save(createUser("aaa@aaa.com", "userA"));
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		mockMvc.perform(get("/api/squad/{squadId}/missions", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드에 속한 사용자가 아닙니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("미션 생성 성공")
 	void successCreateMission() throws Exception {
 		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
