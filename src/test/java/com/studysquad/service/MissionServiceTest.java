@@ -1,12 +1,16 @@
 package com.studysquad.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,12 +19,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.studysquad.global.error.exception.NotMentorException;
+import com.studysquad.global.error.exception.NotSquadUserException;
 import com.studysquad.global.error.exception.ProcessMissionException;
 import com.studysquad.global.error.exception.SquadNotProgressException;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.dto.MissionCreateDto;
 import com.studysquad.mission.dto.MissionEditDto;
+import com.studysquad.mission.dto.MissionResponseDto;
 import com.studysquad.mission.repository.MissionRepository;
 import com.studysquad.mission.service.MissionService;
 import com.studysquad.squad.domain.Squad;
@@ -44,33 +50,69 @@ public class MissionServiceTest {
 	MissionService missionService;
 
 	@Test
+	@DisplayName("미션 리스트 조회")
+	void successGetMissions() {
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		LoginUser loginUser = createLoginUser(user);
+
+		List<MissionResponseDto> missionResponses = IntStream.range(0, 5)
+			.mapToObj(i -> MissionResponseDto.builder()
+				.missionTitle(String.format("title%d", i))
+				.missionContent(String.format("content%d", i))
+				.missionSequence(i)
+				.missionStatus(MissionStatus.NOT_PROCESS)
+				.build())
+			.collect(Collectors.toList());
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isUserOfSquad(squad.getId(), user.getId()))
+			.thenReturn(true);
+		when(missionRepository.getMissions(squad.getId()))
+			.thenReturn(missionResponses);
+
+		List<MissionResponseDto> result = missionService.getMissions(squad.getId(), loginUser);
+
+		assertThat(result).hasSize(5);
+	}
+
+	@Test
+	@DisplayName("해당 스쿼드 아닌 사용자가 미션 리스트 조회")
+	void failGetMissionsWithNotInSquad() {
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		LoginUser loginUser = createLoginUser(user);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isUserOfSquad(squad.getId(), user.getId()))
+			.thenReturn(false);
+
+		assertThatThrownBy(() -> missionService.getMissions(squad.getId(), loginUser))
+			.isInstanceOf(NotSquadUserException.class)
+			.message().isEqualTo("스쿼드에 속한 사용자가 아닙니다");
+	}
+
+	@Test
 	@DisplayName("미션 생성 성공")
 	void successCreateMissions() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build();
-		Mission mission = Mission.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
-			.missionStatus(MissionStatus.PROCESS)
-			.missionSequence(0)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		Mission mission = createMission(squad, 0, MissionStatus.PROCESS);
+
 		MissionCreateDto missionCreateDto = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
+
 		List<MissionCreateDto> createRequest = Collections.singletonList(missionCreateDto);
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -89,25 +131,17 @@ public class MissionServiceTest {
 	@Test
 	@DisplayName("진행중이지 않은 스쿼드에 미션 생성")
 	void failCreateSquadNotProcessSquad() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.RECRUIT)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.RECRUIT);
+
 		MissionCreateDto missionCreateDto = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
+
 		List<MissionCreateDto> createRequest = Collections.singletonList(missionCreateDto);
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -122,25 +156,17 @@ public class MissionServiceTest {
 	@Test
 	@DisplayName("멘토가 아닌 사용자가 미션 생성")
 	void failCreateMissionNotMentor() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+
 		MissionCreateDto missionCreateDto = MissionCreateDto.builder()
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
+			.missionTitle("title")
+			.missionContent("content")
 			.missionSequence(0)
 			.build();
+
 		List<MissionCreateDto> createRequest = Collections.singletonList(missionCreateDto);
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -157,30 +183,16 @@ public class MissionServiceTest {
 	@Test
 	@DisplayName("미션 수정 성공")
 	void successEditMission() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build();
-		Mission mission = Mission.builder()
-			.squad(squad)
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
-			.missionStatus(MissionStatus.NOT_PROCESS)
-			.missionSequence(0)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		Mission mission = createMission(squad, 0, MissionStatus.NOT_PROCESS);
+
 		MissionEditDto editRequest = MissionEditDto.builder()
-			.missionTitle("editMissionTitle")
-			.missionContent("editMissionContent")
+			.missionTitle("editTitle")
+			.missionContent("editContent")
 			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -193,37 +205,23 @@ public class MissionServiceTest {
 
 		missionService.editMission(squad.getId(), mission.getId(), editRequest, loginUser);
 
-		assertThat(mission.getMissionTitle()).isEqualTo(editRequest.getMissionTitle());
-		assertThat(mission.getMissionContent()).isEqualTo(editRequest.getMissionContent());
+		AssertionsForClassTypes.assertThat(mission.getMissionTitle()).isEqualTo(editRequest.getMissionTitle());
+		AssertionsForClassTypes.assertThat(mission.getMissionContent()).isEqualTo(editRequest.getMissionContent());
 	}
 
 	@Test
 	@DisplayName("미진행중인 스쿼드에서 미션 수정")
 	void failEditMissionWithNotProcessSquad() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.END)
-			.build();
-		Mission mission = Mission.builder()
-			.squad(squad)
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
-			.missionStatus(MissionStatus.END)
-			.missionSequence(0)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.END);
+		Mission mission = createMission(squad, 0, MissionStatus.END);
+
 		MissionEditDto editRequest = MissionEditDto.builder()
 			.missionTitle("editTitle")
 			.missionContent("editContent")
 			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -238,24 +236,17 @@ public class MissionServiceTest {
 	@Test
 	@DisplayName("멘토가 아닌 사용자가 미션 수정")
 	void failEditMissionWithNotMentor() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build();
-		Mission mission = Mission.builder().build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		Mission mission = createMission(squad, 0, MissionStatus.PROCESS);
+
 		MissionEditDto editRequest = MissionEditDto.builder()
 			.missionTitle("editTitle")
 			.missionContent("editContent")
 			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+
+		LoginUser loginUser = createLoginUser(user);
+
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
 		when(squadRepository.findById(squad.getId()))
@@ -271,30 +262,16 @@ public class MissionServiceTest {
 	@Test
 	@DisplayName("진행중인 미션 수정")
 	void failEditMissionWithProcessMission() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.role(Role.USER)
-			.build();
-		Squad squad = Squad.builder()
-			.squadName("squad")
-			.squadExplain("squadExplain")
-			.squadStatus(SquadStatus.PROCESS)
-			.build();
-		Mission mission = Mission.builder()
-			.squad(squad)
-			.missionTitle("missionTitle")
-			.missionContent("missionContent")
-			.missionStatus(MissionStatus.PROCESS)
-			.missionSequence(0)
-			.build();
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		Mission mission = createMission(squad, 0, MissionStatus.PROCESS);
+
 		MissionEditDto editRequest = MissionEditDto.builder()
-			.missionTitle("editMissionTitle")
-			.missionContent("editMissionContent")
+			.missionTitle("editTitle")
+			.missionContent("editContent")
 			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.role(user.getRole())
-			.build();
+
+		LoginUser loginUser = createLoginUser(user);
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -308,5 +285,38 @@ public class MissionServiceTest {
 		assertThatThrownBy(() -> missionService.editMission(squad.getId(), mission.getId(), editRequest, loginUser))
 			.isInstanceOf(ProcessMissionException.class)
 			.message().isEqualTo("진행중인 미션 입니다");
+	}
+
+	private User createUser() {
+		return User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.role(Role.USER)
+			.build();
+	}
+
+	private Squad createSquad(SquadStatus status) {
+		return Squad.builder()
+			.squadName("squad")
+			.squadExplain("squadExplain")
+			.squadStatus(status)
+			.build();
+	}
+
+	private Mission createMission(Squad squad, int sequence, MissionStatus status) {
+		return Mission.builder()
+			.squad(squad)
+			.missionTitle("missionTitle")
+			.missionContent("missionContent")
+			.missionSequence(sequence)
+			.missionStatus(status)
+			.build();
+	}
+
+	private LoginUser createLoginUser(User user) {
+		return LoginUser.builder()
+			.email(user.getEmail())
+			.role(user.getRole())
+			.build();
 	}
 }
