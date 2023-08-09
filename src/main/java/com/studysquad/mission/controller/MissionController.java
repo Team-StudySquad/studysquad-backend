@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import com.studysquad.global.common.SuccessResponse;
 import com.studysquad.global.security.Login;
 import com.studysquad.mission.dto.MissionCreateDto;
 import com.studysquad.mission.dto.MissionEditDto;
+import com.studysquad.mission.dto.MissionResponseDto;
 import com.studysquad.mission.service.MissionService;
 import com.studysquad.user.dto.LoginUser;
 
@@ -26,6 +28,18 @@ import lombok.RequiredArgsConstructor;
 public class MissionController {
 
 	private final MissionService missionService;
+
+	@GetMapping("/api/squad/{squadId}/missions")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<List<MissionResponseDto>> getMissions(@PathVariable Long squadId,
+		@Login LoginUser loginUser) {
+
+		return SuccessResponse.<List<MissionResponseDto>>builder()
+			.status(HttpStatus.OK.value())
+			.message("미션 리스트 조회 성공")
+			.data(missionService.getMissions(squadId, loginUser))
+			.build();
+	}
 
 	@PostMapping("/api/squad/{squadId}/mission")
 	@ResponseStatus(HttpStatus.CREATED)
