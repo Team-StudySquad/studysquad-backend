@@ -13,6 +13,8 @@ import com.studysquad.squad.dto.UserSquadResponseDto;
 
 public interface SquadRepositoryCustom {
 
+	Boolean isUserOfSquad(Long squadId, Long userId);
+
 	Boolean isMentorOfSquad(Long squadId, Long userId);
 
 	Optional<ProcessSquadDto> getProcessSquad(Long userId);

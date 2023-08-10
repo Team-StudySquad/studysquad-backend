@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.studysquad.global.error.exception.MissionNotFoundException;
+import com.studysquad.global.error.exception.NotFoundProcessMission;
 import com.studysquad.global.error.exception.NotMentorException;
 import com.studysquad.global.error.exception.NotSquadUserException;
 import com.studysquad.global.error.exception.ProcessMissionException;
@@ -36,6 +37,18 @@ public class MissionService {
 	private final MissionRepository missionRepository;
 	private final UserRepository userRepository;
 	private final SquadRepository squadRepository;
+
+	public MissionResponseDto getProcessMission(Long squadId, LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		validateUserIsMemberOfSquad(squad, user);
+
+		return missionRepository.getProcessMission(squad.getId())
+			.orElseThrow(NotFoundProcessMission::new);
+	}
 
 	public List<MissionResponseDto> getMissions(Long squadId, LoginUser loginUser) {
 		User user = userRepository.findByEmail(loginUser.getEmail())
