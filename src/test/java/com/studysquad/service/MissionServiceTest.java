@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.studysquad.global.error.exception.NotFoundProcessMission;
 import com.studysquad.global.error.exception.NotMentorException;
 import com.studysquad.global.error.exception.NotSquadUserException;
 import com.studysquad.global.error.exception.ProcessMissionException;
@@ -96,6 +97,78 @@ public class MissionServiceTest {
 		assertThatThrownBy(() -> missionService.getMissions(squad.getId(), loginUser))
 			.isInstanceOf(NotSquadUserException.class)
 			.message().isEqualTo("스쿼드에 속한 사용자가 아닙니다");
+	}
+
+	@Test
+	@DisplayName("진행중인 미션 조회")
+	void successGetProcessMission() {
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		MissionResponseDto missionResponseDto = MissionResponseDto.builder()
+			.missionId(1L)
+			.missionTitle("title")
+			.missionContent("content")
+			.missionSequence(0)
+			.missionStatus(MissionStatus.PROCESS)
+			.build();
+		LoginUser loginUser = createLoginUser(user);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isUserOfSquad(squad.getId(), user.getId()))
+			.thenReturn(true);
+		when(missionRepository.getProcessMission(squad.getId()))
+			.thenReturn(Optional.of(missionResponseDto));
+
+		MissionResponseDto result = missionService.getProcessMission(squad.getId(), loginUser);
+
+		assertThat(result.getMissionId()).isEqualTo(missionResponseDto.getMissionId());
+		assertThat(result.getMissionTitle()).isEqualTo(missionResponseDto.getMissionTitle());
+		assertThat(result.getMissionContent()).isEqualTo(missionResponseDto.getMissionContent());
+		assertThat(result.getMissionSequence()).isEqualTo(missionResponseDto.getMissionSequence());
+		assertThat(result.getMissionStatus()).isEqualTo(missionResponseDto.getMissionStatus());
+	}
+
+	@Test
+	@DisplayName("스쿼드에 속하지 않은 사용자가 진행중인 미션 조회")
+	void failGetProcessSquadWithNotInSquad() {
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		LoginUser loginUser = createLoginUser(user);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isUserOfSquad(squad.getId(), user.getId()))
+			.thenReturn(false);
+
+		assertThatThrownBy(() -> missionService.getProcessMission(squad.getId(), loginUser))
+			.isInstanceOf(NotSquadUserException.class)
+			.message().isEqualTo("스쿼드에 속한 사용자가 아닙니다");
+	}
+
+	@Test
+	@DisplayName("진행중인 미션이 없을 때 진행중인 미션 조회")
+	void failGetProcessSquadHasNotProcessMission() {
+		User user = createUser();
+		Squad squad = createSquad(SquadStatus.PROCESS);
+		LoginUser loginUser = createLoginUser(user);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isUserOfSquad(squad.getId(), user.getId()))
+			.thenReturn(true);
+		when(missionRepository.getProcessMission(squad.getId()))
+			.thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> missionService.getProcessMission(squad.getId(), loginUser))
+			.isInstanceOf(NotFoundProcessMission.class)
+			.message().isEqualTo("진행중인 미션을 찾을 수 없습니다");
 	}
 
 	@Test
