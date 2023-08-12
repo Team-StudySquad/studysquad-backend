@@ -29,6 +29,18 @@ public class MissionController {
 
 	private final MissionService missionService;
 
+	@GetMapping("/api/squad/{squadId}/mission/process")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<MissionResponseDto> getProcessMission(@PathVariable Long squadId,
+		@Login LoginUser loginUser) {
+
+		return SuccessResponse.<MissionResponseDto>builder()
+			.status(HttpStatus.OK.value())
+			.message("진행중인 미션 조회 성공")
+			.data(missionService.getProcessMission(squadId, loginUser))
+			.build();
+	}
+
 	@GetMapping("/api/squad/{squadId}/missions")
 	@ResponseStatus(HttpStatus.OK)
 	public SuccessResponse<List<MissionResponseDto>> getMissions(@PathVariable Long squadId,
