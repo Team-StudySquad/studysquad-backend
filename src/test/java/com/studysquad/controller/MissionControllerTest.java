@@ -102,6 +102,61 @@ public class MissionControllerTest {
 
 	@Test
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("진행중인 미션 조회")
+	void successGetProcessMission() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		missionRepository.save(createMission(squad, 0, MissionStatus.PROCESS));
+		missionRepository.save(createMission(squad, 1, MissionStatus.NOT_PROCESS));
+
+		mockMvc.perform(get("/api/squad/{squadId}/mission/process", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("진행중인 미션 조회 성공"))
+			.andExpect(jsonPath("$.data.missionStatus").value(MissionStatus.PROCESS.toString()))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("스쿼드에 진행중인 미션이 없을 때 진행중인 미션 조회")
+	void failGetProcessMissionNotHasProcessSquad() throws Exception {
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userSquadRepository.save(createUserSquad(user, squad, true, true));
+
+		mockMvc.perform(get("/api/squad/{squadId}/mission/process", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+			.andExpect(jsonPath("$.message").value("진행중인 미션을 찾을 수 없습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("스쿼드에 속하지 않은 사용자가 진행중인 미션 조회")
+	void failGetMissionWithNotInSquad() throws Exception {
+		User userB = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		Squad squad = squadRepository.save(createSquad(SquadStatus.PROCESS));
+
+		userRepository.save(createUser("aaa@aaa.com", "userA"));
+		userSquadRepository.save(createUserSquad(userB, squad, true, true));
+		missionRepository.save(createMission(squad, 0, MissionStatus.PROCESS));
+
+		mockMvc.perform(get("/api/squad/{squadId}/mission/process", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("미션 생성 성공")
 	void successCreateMission() throws Exception {
 		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
