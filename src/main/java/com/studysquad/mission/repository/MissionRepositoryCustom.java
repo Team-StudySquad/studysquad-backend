@@ -1,0 +1,13 @@
+package com.studysquad.mission.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.studysquad.mission.dto.MissionResponseDto;
+
+public interface MissionRepositoryCustom {
+
+	Optional<MissionResponseDto> getProcessMission(Long squadId);
+
+	List<MissionResponseDto> getMissions(Long squadId);
+}

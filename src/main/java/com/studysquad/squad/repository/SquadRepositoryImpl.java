@@ -40,6 +40,33 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
 	@Override
+	public Boolean isUserOfSquad(Long squadId, Long userId) {
+		Integer fetchOne = queryFactory
+			.selectOne()
+			.from(squad)
+			.join(userSquad).on(userSquad.squad.id.eq(squad.id))
+			.where(squad.id.eq(squadId)
+				.and(userSquad.user.id.eq(userId)))
+			.fetchFirst();
+
+		return fetchOne != null;
+	}
+
+	@Override
+	public Boolean isMentorOfSquad(Long squadId, Long userId) {
+		Integer fetchOne = queryFactory
+			.selectOne()
+			.from(squad)
+			.join(userSquad).on(userSquad.squad.id.eq(squad.id))
+			.where(squad.id.eq(squadId)
+				.and(userSquad.user.id.eq(userId))
+				.and(userSquad.isMentor.isTrue()))
+			.fetchFirst();
+
+		return fetchOne != null;
+	}
+
+	@Override
 	public Optional<ProcessSquadDto> getProcessSquad(Long userId) {
 		ProcessSquadDto fetchOne = queryFactory.select(new QProcessSquadDto(
 				squad.id,

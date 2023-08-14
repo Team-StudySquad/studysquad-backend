@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
 import com.studysquad.board.domain.Board;
+import com.studysquad.mission.dto.MissionEditDto;
 import com.studysquad.squad.domain.Squad;
 
 import lombok.AccessLevel;
@@ -30,27 +31,31 @@ public class Mission {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "mission_id")
 	private Long id;
-
 	private String missionTitle;
 	private String missionContent;
-
 	@Enumerated(EnumType.STRING)
 	private MissionStatus missionStatus;
 	private int missionSequence;
-
 	@ManyToOne(fetch = LAZY)
 	@JoinColumn(name = "squad_id")
 	private Squad squad;
-
 	@OneToOne(fetch = LAZY)
 	@JoinColumn(name = "board_id")
 	private Board board;
 
 	@Builder
-	public Mission(String missionTitle, String missionContent, MissionStatus missionStatus, int missionSequence) {
+	public Mission(String missionTitle, String missionContent, MissionStatus missionStatus, int missionSequence,
+		Squad squad, Board board) {
 		this.missionTitle = missionTitle;
 		this.missionContent = missionContent;
 		this.missionStatus = missionStatus;
 		this.missionSequence = missionSequence;
+		this.squad = squad;
+		this.board = board;
+	}
+
+	public void edit(MissionEditDto editRequest) {
+		this.missionTitle = editRequest.getMissionTitle();
+		this.missionContent = editRequest.getMissionContent();
 	}
 }
