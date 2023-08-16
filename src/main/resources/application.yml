@@ -12,3 +12,5 @@ spring:
 spring:
   jpa:
     open-in-view: false
+  jackson:
+    default-property-inclusion: non_null
