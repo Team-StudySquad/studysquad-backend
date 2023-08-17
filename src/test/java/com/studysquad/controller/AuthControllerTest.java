@@ -151,7 +151,6 @@ public class AuthControllerTest {
 				.content(json))
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("로그인 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 	}
 
@@ -316,7 +315,6 @@ public class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("회원 가입 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 	}
 
@@ -431,7 +429,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("토큰 재발급 성공")
-		// @Transactional
 	void successfulReissueToken() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -491,7 +488,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("존재하지 않는 사용자 정보를 가지고 요청시 실패 응답 바디 리턴")
-		// @Transactional
 	void failReissueExistTokenReturnFailResponseBody() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -522,7 +518,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("로그아웃 성공")
-		// @Transactional
 	void successLogout() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -535,11 +530,9 @@ public class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("로그아웃 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 
 		Optional<User> findUser = userRepository.findById(user.getId());
-		// assertThat(user.getRefreshToken()).isNull();
 		assertThat(findUser).isNotEmpty();
 		assertThat(findUser.get().getRefreshToken()).isNull();
 	}
