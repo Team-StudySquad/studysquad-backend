@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
@@ -39,6 +40,8 @@ public class AuthControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	UserRepository userRepository;
 	@Autowired
 	PasswordEncoder passwordEncoder;
@@ -48,8 +51,8 @@ public class AuthControllerTest {
 	JwtProvider jwtProvider;
 
 	@BeforeEach
-	void clean() {
-		userRepository.deleteAll();
+	void init() {
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
@@ -453,8 +456,9 @@ public class AuthControllerTest {
 					.filter(cookie -> cookie.getName().equals(refreshToken.getHeader()))
 					.findFirst();
 
+				User findUser = userRepository.findById(user.getId()).get();
 				assertThat(myCookie).isPresent();
-				assertThat(myCookie.get().getValue()).isEqualTo(user.getRefreshToken());
+				assertThat(myCookie.get().getValue()).isEqualTo(findUser.getRefreshToken());
 			})
 			.andDo(print());
 	}
