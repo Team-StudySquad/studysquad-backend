@@ -1,0 +1,98 @@
+= Study squad API
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+
+== 사용자 API
+
+=== 사용자 로그인
+
+==== HTTP Request
+
+include::{snippets}/user-login/http-request.adoc[]
+
+===== 요청 바디
+
+include::{snippets}/user-login/request-body.adoc[]
+include::{snippets}/user-login/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/user-login/http-response.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/user-login/response-body.adoc[]
+include::{snippets}/user-login/response-fields.adoc[]
+
+=== 사용자 회원가입
+
+==== HTTP Request
+
+include::{snippets}/user-join/http-request.adoc[]
+
+===== 요청 바디
+
+include::{snippets}/user-join/request-body.adoc[]
+include::{snippets}/user-join/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/user-join/http-response.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/user-join/response-body.adoc[]
+include::{snippets}/user-join/response-fields.adoc[]
+
+=== 사용자 토큰 재발급
+
+==== HTTP Request
+
+include::{snippets}/user-reissue/http-request.adoc[]
+
+===== 요청 헤더 쿠키
+
+include::{snippets}/user-reissue/cookie-request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/user-reissue/http-response.adoc[]
+
+===== 응답 헤더
+
+include::{snippets}/user-reissue/response-headers.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/user-reissue/response-body.adoc[]
+include::{snippets}/user-reissue/response-fields.adoc[]
+
+=== 사용자 로그아웃
+
+==== HTTP Request
+
+include::{snippets}/user-logout/http-request.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/user-logout/request-headers.adoc[]
+
+===== 요청 헤더 쿠키
+
+include::{snippets}/user-logout/cookie-request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/user-logout/http-response.adoc[]
+
+===== 응답 헤더
+
+include::{snippets}/user-logout/response-headers.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/user-logout/response-body.adoc[]
+include::{snippets}/user-logout/response-fields.adoc[]
