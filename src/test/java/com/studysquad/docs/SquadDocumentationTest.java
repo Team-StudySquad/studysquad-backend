@@ -371,6 +371,9 @@ public class SquadDocumentationTest {
 			.andDo(document("squad-join",
 				preprocessRequest(prettyPrint()),
 				preprocessResponse(prettyPrint()),
+				pathParameters(
+					parameterWithName("squadId").description("스쿼드 아이디")
+				),
 				requestHeaders(
 					headerWithName("Authorization").description("어세스 토큰")
 				),
