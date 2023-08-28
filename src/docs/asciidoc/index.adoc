@@ -96,3 +96,154 @@ include::{snippets}/user-logout/response-headers.adoc[]
 
 include::{snippets}/user-logout/response-body.adoc[]
 include::{snippets}/user-logout/response-fields.adoc[]
+
+== 스쿼드 API
+
+=== 스쿼드 단건 조회
+
+==== HTTP Request
+
+include::{snippets}/squad-get/http-request.adoc[]
+===== 요청 파라미터
+
+include::{snippets}/squad-get/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/squad-get/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/squad-get/response-body.adoc[]
+include::{snippets}/squad-get/response-fields.adoc[]
+
+=== 진행중인 스쿼드 조회
+
+==== HTTP Request
+
+include::{snippets}/get-process-squad/http-request.adoc[]
+===== 요청 헤더
+
+include::{snippets}/get-process-squad/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-process-squad/http-response.adoc[]
+
+응답 바디
+
+include::{snippets}/get-process-squad/response-body.adoc[]
+include::{snippets}/get-process-squad/response-fields.adoc[]
+
+=== 모집중인 스쿼드 조회
+
+==== HTTP Request
+
+include::{snippets}/get-recruit-squad/http-request.adoc[]
+
+===== 요청 파라미터
+
+include::{snippets}/get-recruit-squad/request-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-recruit-squad/http-response.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/get-recruit-squad/response-body.adoc[]
+include::{snippets}/get-recruit-squad/response-fields.adoc[]
+
+=== 사용자 스쿼드 조회
+
+==== HTTP Request
+
+include::{snippets}/get-user-squad/http-request.adoc[]
+===== 요청 헤더
+
+include::{snippets}/get-user-squad/request-headers.adoc[]
+
+===== 요청 파라미터
+
+include::{snippets}/get-user-squad/request-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-user-squad/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/get-user-squad/response-body.adoc[]
+include::{snippets}/get-user-squad/response-fields.adoc[]
+
+=== 종료된 스쿼드 단건 조회
+
+==== HTTP Request
+
+include::{snippets}/get-end-squad/http-request.adoc[]
+
+===== 요청 파라미터
+
+include::{snippets}/get-end-squad/path-parameters.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/get-end-squad/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-end-squad/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/get-end-squad/response-body.adoc[]
+include::{snippets}/get-end-squad/response-fields.adoc[]
+
+=== 스쿼드 생성
+
+==== HTTP Request
+
+include::{snippets}/squad-create/http-request.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/squad-create/request-headers.adoc[]
+
+===== 요청 바디
+
+include::{snippets}/squad-create/request-body.adoc[]
+include::{snippets}/squad-create/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/squad-create/http-response.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/squad-create/response-body.adoc[]
+include::{snippets}/squad-create/response-fields.adoc[]
+
+=== 스쿼드 가입
+
+==== HTTP Request
+
+include::{snippets}/squad-join/http-request.adoc[]
+
+===== 요청 파라미터
+
+include::{snippets}/squad-join/path-parameters.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/squad-join/request-headers.adoc[]
+
+===== 요청 바디
+
+include::{snippets}/squad-join/request-body.adoc[]
+include::{snippets}/squad-join/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/squad-join/http-response.adoc[]
+
+===== 응답 바디
+
+include::{snippets}/squad-join/response-body.adoc[]
+include::{snippets}/squad-join/response-fields.adoc[]
