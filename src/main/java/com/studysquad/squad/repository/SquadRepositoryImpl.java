@@ -67,6 +67,17 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 	}
 
 	@Override
+	public Boolean isSquadActive(Long squadId) {
+		Integer fetchOne = queryFactory
+			.selectOne()
+			.from(squad)
+			.where(squad.id.eq(squadId)
+				.and(squad.squadStatus.eq(SquadStatus.PROCESS)))
+			.fetchOne();
+		return fetchOne != null;
+	}
+
+	@Override
 	public Optional<ProcessSquadDto> getProcessSquad(Long userId) {
 		ProcessSquadDto fetchOne = queryFactory.select(new QProcessSquadDto(
 				squad.id,

@@ -17,6 +17,9 @@ public interface SquadRepositoryCustom {
 
 	Boolean isMentorOfSquad(Long squadId, Long userId);
 
+	//board에서 사용
+	Boolean isSquadActive(Long squadId);
+
 	Optional<ProcessSquadDto> getProcessSquad(Long userId);
 
 	Optional<SquadResponseDto> findSquadBySquadId(Long squadId);
