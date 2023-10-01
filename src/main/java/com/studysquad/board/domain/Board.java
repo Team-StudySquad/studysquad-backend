@@ -54,7 +54,7 @@ public class Board {
 	private LocalDateTime createAt;
 
 	@Builder
-	public Board(Long id, Squad squad, User user, Mission mission, String title, String content) {
+	public Board(Squad squad, User user, Mission mission, String title, String content) {
 		this.squad = squad;
 		this.user = user;
 		this.mission = mission;

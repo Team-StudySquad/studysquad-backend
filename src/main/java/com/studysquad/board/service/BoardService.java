@@ -1,21 +1,35 @@
 package com.studysquad.board.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
 import com.studysquad.board.domain.Board;
-import com.studysquad.board.domain.BoardEditor;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
 import com.studysquad.board.request.BoardEdit;
 import com.studysquad.board.response.BoardResponse;
+import com.studysquad.global.error.exception.NotFoundBoard;
+import com.studysquad.global.error.exception.NotFoundProcessMission;
+import com.studysquad.global.error.exception.NotFoundSquadBoard;
+import com.studysquad.global.error.exception.NotMentorException;
+import com.studysquad.global.error.exception.NotThreeSquadBoard;
+import com.studysquad.global.error.exception.SquadNotFoundException;
+import com.studysquad.global.error.exception.UserNotFoundException;
+import com.studysquad.mission.domain.Mission;
+import com.studysquad.mission.repository.MissionRepository;
+import com.studysquad.squad.domain.Squad;
+import com.studysquad.squad.domain.SquadStatus;
+import com.studysquad.squad.repository.SquadRepository;
+import com.studysquad.user.domain.User;
+import com.studysquad.user.dto.LoginUser;
+import com.studysquad.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -23,47 +37,103 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BoardService {
 
-    private final BoardRepository boardRepository;
+	private final BoardRepository boardRepository;
 
-    public void write(BoardCreate boardCreate){
-        Board board = Board.builder()
-                .title(boardCreate.getTitle())
-                .content(boardCreate.getContent())
-                .build();
-        boardRepository.save(board);
-    }
+	private final UserRepository userRepository;
 
-    public BoardResponse get(Long id){
-        Board response = boardRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
+	private final SquadRepository squadRepository;
 
-        return BoardResponse.builder()
-            .id(response.getId())
-            .title(response.getTitle())
-            .content(response.getContent())
-            .build();
-    }
+	private final MissionRepository missionRepository;
 
-    public List<BoardResponse> getAllBoards(Pageable pageable){
-        return boardRepository.findAll(pageable).stream()
-            .map(BoardResponse::new)
-            .collect(Collectors.toList());
-    }
+	@Transactional
+	public void createBoard(BoardCreate boardCreate, Long squadId, LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
 
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
 
-    @Transactional
-    public void edit(Long id, BoardEdit boardEdit){
-        Board board = boardRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
+		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
+			throw new NotMentorException();
+		}
 
-       board.edit(boardEdit.getTitle() != null ? boardEdit.getTitle() : board.getTitle(),
-                  boardEdit.getContent() != null ? boardEdit.getContent() : board.getContent());
+		Mission processMission = missionRepository.getProcessMissionEntity(squadId)
+			.orElseThrow(NotFoundProcessMission::new);
 
-    }
+		Long squadBoardCount = missionRepository.hasSquadBoardByMissionId(processMission.getId())
+			.orElseThrow(NotFoundSquadBoard::new);
 
-    public void delete(Long id) {
-        Board board = boardRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
-        boardRepository.delete(board);
-    }
+		if (!hasThreeSquadBoard(squadBoardCount)) {
+			throw new NotThreeSquadBoard();
+		}
+
+		processMission.updateStatusEnd();
+
+		missionRepository.getNextMission(processMission.getMissionSequence())
+			.ifPresentOrElse(Mission::updateStatusProcess,
+				() -> squad.updateStatus(SquadStatus.END));
+
+		boardRepository.save(Board.builder()
+			.user(user)
+			.squad(squad)
+			.mission(processMission)
+			.title(boardCreate.getTitle())
+			.content(boardCreate.getContent())
+			.build());
+	}
+
+	public BoardResponse getBoard(Long boardId) {
+		return boardRepository.getBoardById(boardId)
+			.orElseThrow(NotFoundBoard::new);
+	}
+
+	public List<BoardResponse> getAllBoards(@PageableDefault(size = 5) Pageable pageable) {
+		// return boardRepository.findAll(pageable).stream()
+		//     .map(BoardResponse::new)
+		//     .collect(Collectors.toList());
+		return null;
+	}
+
+	@Transactional
+	public void edit(Long boardId, Long squadId, BoardEdit boardEdit, LoginUser loginUser) {
+
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
+			throw new NotMentorException();
+		}
+
+		Board board = boardRepository.findById(boardId)
+			.orElseThrow(NotFoundBoard::new);
+
+		board.edit(boardEdit.getTitle() != null ? boardEdit.getTitle() : board.getTitle(),
+			boardEdit.getContent() != null ? boardEdit.getContent() : board.getContent());
+
+	}
+
+	public void delete(Long boardId, Long squadId, LoginUser loginUser) {
+
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
+			throw new NotMentorException();
+		}
+
+		Board board = boardRepository.findById(boardId)
+			.orElseThrow(NotFoundBoard::new);
+
+		boardRepository.delete(board);
+	}
+
+	private boolean hasThreeSquadBoard(Long squadBoardCount) {
+		return squadBoardCount.equals(3L);
+	}
 }

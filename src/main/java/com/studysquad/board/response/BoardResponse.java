@@ -1,5 +1,6 @@
 package com.studysquad.board.response;
 
+import com.querydsl.core.annotations.QueryProjection;
 import com.studysquad.board.domain.Board;
 
 import lombok.Builder;
@@ -7,20 +8,18 @@ import lombok.Getter;
 
 @Getter
 public class BoardResponse {
-	private final Long Id;
-	private final String title;
-	private final String content; // 상수로 생성, Read Only
-
-	public BoardResponse(Board board){
-		this.Id = board.getId();
-		this.title = board.getTitle();
-		this.content = board.getContent();
-	}
+	private Long boardId;
+	private String nickname;
+	private String title;
+	private String content;
+	// todo. 스쿼드 이름 추가 할지 결정하고 추가할 것
 
 	@Builder
-	public BoardResponse(Long id, String title, String content) {
-		this.Id = id;
-		this.title = title.substring(0, Math.min(title.length(), 10));
+	@QueryProjection
+	public BoardResponse(Long boardId, String nickname, String title, String content) {
+		this.boardId = boardId;
+		this.nickname = nickname;
+		this.title = title;
 		this.content = content;
 	}
 }
