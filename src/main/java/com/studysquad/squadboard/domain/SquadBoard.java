@@ -52,4 +52,9 @@ public class SquadBoard {
 		this.squadBoardContent = squadBoardContent;
 		this.createAt = LocalDateTime.now();
 	}
+
+	public void edit(String squadBoardTitle, String squadBoardContent) {
+		this.squadBoardTitle = squadBoardTitle;
+		this.squadBoardContent = squadBoardContent;
+	}
 }
