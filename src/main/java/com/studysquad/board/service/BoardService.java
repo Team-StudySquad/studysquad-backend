@@ -1,13 +1,16 @@
 package com.studysquad.board.service;
 
-import java.util.List;
-
 import javax.transaction.Transactional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.board.request.BoardCreate;
 import com.studysquad.board.request.BoardEdit;
+import com.studysquad.board.request.BoardSearchCondition;
 import com.studysquad.board.response.BoardResponse;
 import com.studysquad.global.error.exception.NotFoundBoard;
 import com.studysquad.global.error.exception.NotFoundProcessMission;
@@ -27,10 +30,6 @@ import com.studysquad.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -87,11 +86,8 @@ public class BoardService {
 			.orElseThrow(NotFoundBoard::new);
 	}
 
-	public List<BoardResponse> getAllBoards(@PageableDefault(size = 5) Pageable pageable) {
-		// return boardRepository.findAll(pageable).stream()
-		//     .map(BoardResponse::new)
-		//     .collect(Collectors.toList());
-		return null;
+	public Page<BoardResponse> getBoards(BoardSearchCondition searchCondition, Pageable pageable) {
+		return boardRepository.getBoards(searchCondition, pageable);
 	}
 
 	@Transactional

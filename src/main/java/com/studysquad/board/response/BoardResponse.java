@@ -1,7 +1,6 @@
 package com.studysquad.board.response;
 
 import com.querydsl.core.annotations.QueryProjection;
-import com.studysquad.board.domain.Board;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -9,17 +8,26 @@ import lombok.Getter;
 @Getter
 public class BoardResponse {
 	private Long boardId;
-	private String nickname;
-	private String title;
-	private String content;
-	// todo. 스쿼드 이름 추가 할지 결정하고 추가할 것
+	private String creator;
+	private String categoryName;
+	private String squadName;
+	private String missionTitle;
+	private String missionContent;
+	private String boardTitle;
+	private String boardContent;
 
 	@Builder
 	@QueryProjection
-	public BoardResponse(Long boardId, String nickname, String title, String content) {
+	public BoardResponse(Long boardId, String creator, String categoryName, String squadName, String missionTitle,
+		String missionContent,
+		String boardTitle, String boardContent) {
 		this.boardId = boardId;
-		this.nickname = nickname;
-		this.title = title;
-		this.content = content;
+		this.creator = creator;
+		this.categoryName = categoryName;
+		this.squadName = squadName;
+		this.missionTitle = missionTitle;
+		this.missionContent = missionContent;
+		this.boardTitle = boardTitle;
+		this.boardContent = boardContent;
 	}
 }
