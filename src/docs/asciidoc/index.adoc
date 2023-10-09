@@ -247,3 +247,97 @@ include::{snippets}/squad-join/http-response.adoc[]
 
 include::{snippets}/squad-join/response-body.adoc[]
 include::{snippets}/squad-join/response-fields.adoc[]
+
+== 미션 API
+
+=== 진행중인 미션 조회
+
+==== HTTP Request
+
+include::{snippets}/get-process-mission/http-request.adoc[]
+===== 요청 파라미터
+
+include::{snippets}/get-process-mission/path-parameters.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/get-process-mission/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-process-mission/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/get-process-mission/response-body.adoc[]
+include::{snippets}/get-process-mission/response-fields.adoc[]
+
+=== 미션 리스트 조회
+
+==== HTTP Request
+
+include::{snippets}/get-missions/http-request.adoc[]
+===== 요청 파라미터
+
+include::{snippets}/get-missions/path-parameters.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/get-missions/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-missions/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/get-missions/response-body.adoc[]
+include::{snippets}/get-missions/response-fields.adoc[]
+
+=== 미션 생성
+
+==== HTTP Request
+
+include::{snippets}/create-mission/http-request.adoc[]
+
+===== 요청 파라미터
+
+include::{snippets}/create-mission/path-parameters.adoc[]
+
+===== 요청 헤더
+
+include::{snippets}/create-mission/request-headers.adoc[]
+
+===== 요청 바디
+
+include::{snippets}/create-mission/request-body.adoc[]
+include::{snippets}/create-mission/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/create-mission/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/create-mission/response-body.adoc[]
+include::{snippets}/create-mission/response-fields.adoc[]
+
+=== 미션 수정
+
+==== HTTP Request
+
+include::{snippets}/edit-mission/http-request.adoc[]
+===== 요청 헤더
+
+include::{snippets}/edit-mission/request-headers.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/edit-mission/request-body.adoc[]
+include::{snippets}/edit-mission/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/edit-mission/http-response.adoc[]
+===== 응답 바디
+
+include::{snippets}/edit-mission/response-body.adoc[]
+include::{snippets}/edit-mission/response-fields.adoc[]
