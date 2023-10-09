@@ -1,11 +1,9 @@
 package com.studysquad.board.controller;
 
-import java.util.List;
-
 import javax.validation.Valid;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.studysquad.board.request.BoardCreate;
 import com.studysquad.board.request.BoardEdit;
+import com.studysquad.board.request.BoardSearchCondition;
 import com.studysquad.board.response.BoardResponse;
 import com.studysquad.board.service.BoardService;
 import com.studysquad.global.common.SuccessResponse;
@@ -31,6 +30,26 @@ import lombok.RequiredArgsConstructor;
 public class BoardController {
 
 	private final BoardService boardService;
+
+	@GetMapping("/api/board/{boardId}")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<BoardResponse> getBoard(@PathVariable Long boardId) {
+		return SuccessResponse.<BoardResponse>builder()
+			.status(HttpStatus.OK.value())
+			.message("게시글 단건 조회 성공")
+			.data(boardService.getBoard(boardId))
+			.build();
+	}
+
+	@GetMapping("/api/boards")
+	public SuccessResponse<Page<BoardResponse>> getBoards(BoardSearchCondition searchCondition, Pageable pageable) {
+		return SuccessResponse.<Page<BoardResponse>>builder()
+			.status(HttpStatus.OK.value())
+			.message("게시글 페이징 조회 성공")
+			.data(boardService.getBoards(searchCondition, pageable))
+			.build();
+	}
+
 	@PostMapping("/api/squad/{squadId}/board")
 	@ResponseStatus(HttpStatus.CREATED)
 	public SuccessResponse<Void> board(@RequestBody @Valid BoardCreate boardCreate,
@@ -43,21 +62,6 @@ public class BoardController {
 			.status(HttpStatus.CREATED.value())
 			.message("게시글 작성 성공")
 			.build();
-	}
-
-	@GetMapping("/api/squad/{squadId}/board/{boardId}")
-	@ResponseStatus(HttpStatus.OK)
-	public SuccessResponse<BoardResponse> getBoard(@PathVariable Long boardId) {
-		return SuccessResponse.<BoardResponse>builder()
-			.status(HttpStatus.OK.value())
-			.message("게시글 단건 조회 성공")
-			.data(boardService.getBoard(boardId))
-			.build();
-	}
-
-	@GetMapping("/boards")
-	public List<BoardResponse> getAllBoards(@PageableDefault(size = 5) Pageable pageable) {
-		return boardService.getAllBoards(pageable);
 	}
 
 	@PatchMapping("/api/squad/{squadId}/board/{boardId}")
