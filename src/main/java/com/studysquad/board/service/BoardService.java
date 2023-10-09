@@ -18,6 +18,7 @@ import com.studysquad.global.error.exception.NotFoundSquadBoard;
 import com.studysquad.global.error.exception.NotMentorException;
 import com.studysquad.global.error.exception.NotThreeSquadBoard;
 import com.studysquad.global.error.exception.SquadNotFoundException;
+import com.studysquad.global.error.exception.SquadNotProgressException;
 import com.studysquad.global.error.exception.UserNotFoundException;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.repository.MissionRepository;
@@ -51,6 +52,10 @@ public class BoardService {
 
 		Squad squad = squadRepository.findById(squadId)
 			.orElseThrow(SquadNotFoundException::new);
+
+		if (!squad.getSquadStatus().equals(SquadStatus.PROCESS)) {
+			throw new SquadNotProgressException();
+		}
 
 		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
 			throw new NotMentorException();
