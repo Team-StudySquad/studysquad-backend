@@ -19,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.repository.MissionRepository;
@@ -42,6 +43,8 @@ public class SquadBoardControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	SquadBoardRepository squadBoardRepository;
 	@Autowired
 	UserRepository userRepository;
@@ -56,12 +59,7 @@ public class SquadBoardControllerTest {
 
 	@BeforeEach
 	void init() {
-		squadBoardRepository.deleteAll();
-		userSquadRepository.deleteAll();
-		missionRepository.deleteAll();
-		userRepository.deleteAll();
-		squadRepository.deleteAll();
-
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
