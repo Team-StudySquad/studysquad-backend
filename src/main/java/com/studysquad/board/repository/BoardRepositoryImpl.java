@@ -34,16 +34,7 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
 
 	@Override
 	public Optional<BoardResponse> getBoardById(Long boardId) {
-		BoardResponse fetchOne = queryFactory.select(new QBoardResponse(
-				board.id,
-				user.nickname,
-				category.categoryName,
-				squad.squadName,
-				mission.missionTitle,
-				mission.missionContent,
-				board.title,
-				board.content))
-			.from(board)
+		BoardResponse fetchOne = selectFromBoardResponse()
 			.join(user).on(board.user.id.eq(user.id))
 			.join(squad).on(board.squad.id.eq(squad.id))
 			.join(mission).on(board.mission.id.eq(mission.id))
@@ -56,17 +47,7 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
 
 	@Override
 	public Page<BoardResponse> getBoards(BoardSearchCondition searchCondition, Pageable pageable) {
-		List<BoardResponse> fetch = queryFactory.select(new QBoardResponse(
-				board.id,
-				user.nickname,
-				category.categoryName,
-				squad.squadName,
-				mission.missionTitle,
-				mission.missionContent,
-				board.title,
-				board.content
-			))
-			.from(board)
+		List<BoardResponse> fetch = selectFromBoardResponse()
 			.join(user).on(board.user.id.eq(user.id))
 			.join(squad).on(board.squad.id.eq(squad.id))
 			.join(mission).on(board.mission.id.eq(mission.id))
@@ -85,6 +66,31 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
 			.where(categoryNameEq(searchCondition.getCategoryName()));
 
 		return PageableExecutionUtils.getPage(fetch, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public List<BoardResponse> getBoardsWithSquad(Long squadId) {
+		return selectFromBoardResponse()
+			.join(user).on(board.user.id.eq(user.id))
+			.join(squad).on(board.squad.id.eq(squadId))
+			.join(mission).on(board.mission.id.eq(mission.id))
+			.join(category).on(squad.category.id.eq(category.id))
+			.fetch();
+	}
+
+	private JPAQuery<BoardResponse> selectFromBoardResponse() {
+		return queryFactory.select(new QBoardResponse(
+				board.id,
+				user.nickname,
+				category.categoryName,
+				squad.squadName,
+				mission.missionSequence,
+				mission.missionTitle,
+				mission.missionContent,
+				board.title,
+				board.content
+			))
+			.from(board);
 	}
 
 	private BooleanExpression categoryNameEq(String categoryName) {
