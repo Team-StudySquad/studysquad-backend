@@ -11,6 +11,7 @@ public class BoardResponse {
 	private String creator;
 	private String categoryName;
 	private String squadName;
+	private int missionSequence;
 	private String missionTitle;
 	private String missionContent;
 	private String boardTitle;
@@ -18,12 +19,14 @@ public class BoardResponse {
 
 	@Builder
 	@QueryProjection
-	public BoardResponse(Long boardId, String creator, String categoryName, String squadName, String missionTitle,
+	public BoardResponse(Long boardId, String creator, String categoryName, String squadName, int missionSequence,
+		String missionTitle,
 		String missionContent,
 		String boardTitle, String boardContent) {
 		this.boardId = boardId;
 		this.creator = creator;
 		this.categoryName = categoryName;
+		this.missionSequence = missionSequence;
 		this.squadName = squadName;
 		this.missionTitle = missionTitle;
 		this.missionContent = missionContent;
