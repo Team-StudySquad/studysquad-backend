@@ -1,10 +1,11 @@
 package com.studysquad.board.service;
 
-import javax.transaction.Transactional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BoardService {
 
@@ -44,6 +46,25 @@ public class BoardService {
 	private final SquadRepository squadRepository;
 
 	private final MissionRepository missionRepository;
+
+	public BoardResponse getBoard(Long boardId) {
+		return boardRepository.getBoardById(boardId)
+			.orElseThrow(NotFoundBoard::new);
+	}
+
+	public Page<BoardResponse> getBoards(BoardSearchCondition searchCondition, Pageable pageable) {
+		return boardRepository.getBoards(searchCondition, pageable);
+	}
+
+	public List<BoardResponse> getBoardsWithSquad(Long squadId, LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		return boardRepository.getBoardsWithSquad(squad.getId());
+	}
 
 	@Transactional
 	public void createBoard(BoardCreate boardCreate, Long squadId, LoginUser loginUser) {
@@ -86,15 +107,6 @@ public class BoardService {
 			.build());
 	}
 
-	public BoardResponse getBoard(Long boardId) {
-		return boardRepository.getBoardById(boardId)
-			.orElseThrow(NotFoundBoard::new);
-	}
-
-	public Page<BoardResponse> getBoards(BoardSearchCondition searchCondition, Pageable pageable) {
-		return boardRepository.getBoards(searchCondition, pageable);
-	}
-
 	@Transactional
 	public void edit(Long boardId, Long squadId, BoardEdit boardEdit, LoginUser loginUser) {
 
@@ -116,6 +128,7 @@ public class BoardService {
 
 	}
 
+	@Transactional
 	public void delete(Long boardId, Long squadId, LoginUser loginUser) {
 
 		User user = userRepository.findByEmail(loginUser.getEmail())
