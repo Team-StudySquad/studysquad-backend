@@ -123,6 +123,43 @@ public class BoardServiceTest {
 	}
 
 	@Test
+	@DisplayName("스쿼드의 게시글 전체 조회")
+	void successGetBoardsWithSquad() {
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squadA", "squadExplain", SquadStatus.PROCESS);
+
+		List<BoardResponse> boardResponses = LongStream.range(1, 31)
+			.mapToObj(i -> BoardResponse.builder()
+				.boardId(i)
+				.creator(user.getNickname())
+				.categoryName(category.getCategoryName())
+				.squadName(squad.getSquadName())
+				.missionSequence((int)i)
+				.missionTitle("missionTitle" + i)
+				.missionContent("missionContent" + i)
+				.boardTitle("boardTitle" + i)
+				.boardContent("boardContent" + i)
+				.build())
+			.collect(Collectors.toList());
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(boardRepository.getBoardsWithSquad(squad.getId()))
+			.thenReturn(boardResponses);
+
+		List<BoardResponse> response = boardService.getBoardsWithSquad(squad.getId(), loginUser);
+
+		assertThat(response).isNotEmpty();
+		assertThat(response).hasSize(boardResponses.size());
+		assertThat(response.get(0)).isEqualTo(boardResponses.get(0));
+		verify(boardRepository, times(1)).getBoardsWithSquad(squad.getId());
+	}
+
+	@Test
 	@DisplayName("게시글 생성 성공")
 	void successCreateBoard() {
 		User user = createUser("test@test.com", "test");
