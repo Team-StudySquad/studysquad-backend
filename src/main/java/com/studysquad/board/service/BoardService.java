@@ -31,9 +31,7 @@ import com.studysquad.user.dto.LoginUser;
 import com.studysquad.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
