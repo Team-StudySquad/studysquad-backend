@@ -1,5 +1,7 @@
 package com.studysquad.board.controller;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -47,6 +49,18 @@ public class BoardController {
 			.status(HttpStatus.OK.value())
 			.message("게시글 페이징 조회 성공")
 			.data(boardService.getBoards(searchCondition, pageable))
+			.build();
+	}
+
+	@GetMapping("/api/squad/{squadId}/boards")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<List<BoardResponse>> getBoardsWithSquad(@PathVariable Long squadId,
+		@Login LoginUser loginUser) {
+
+		return SuccessResponse.<List<BoardResponse>>builder()
+			.status(HttpStatus.OK.value())
+			.message("스쿼드 전체 게시글 리스트 조회 성공")
+			.data(boardService.getBoardsWithSquad(squadId, loginUser))
 			.build();
 	}
 
