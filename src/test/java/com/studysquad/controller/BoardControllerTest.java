@@ -158,6 +158,38 @@ public class BoardControllerTest {
 
 	@Test
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("스쿼드의 게시글 전체 조회 성공")
+	void successGetBoardsWithSquad() throws Exception {
+		User userA = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		User userB = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		User userC = userRepository.save(createUser("ccc@ccc.com", "userC"));
+		User userD = userRepository.save(createUser("ddd@ddd.com", "userD"));
+
+		Category category = categoryRepository.save(createCategory("JAVA"));
+
+		Squad squad = squadRepository.save(createSquad(category, "squadA", "squadExplain", SquadStatus.PROCESS));
+
+		userSquadRepository.saveAll(List.of(createMentorUserSquad(squad, userB), createMenteeUserSquad(squad, userA),
+			createMenteeUserSquad(squad, userC), createMenteeUserSquad(squad, userD)));
+
+		Mission missionA = missionRepository.save(createMission(squad, 0, MissionStatus.END));
+		Mission missionB = missionRepository.save(createMission(squad, 1, MissionStatus.END));
+		Mission missionC = missionRepository.save(createMission(squad, 2, MissionStatus.END));
+
+		boardRepository.saveAll(List.of(createBoard(squad, userB, missionA), createBoard(squad, userB, missionB),
+			createBoard(squad, userB, missionC)));
+
+		mockMvc.perform(get("/api/squad/{squadId}/boards", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드 전체 게시글 리스트 조회 성공"))
+			.andExpect(jsonPath("$.data.size()").value(3))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 생성 성공")
 	void successCreateBoard() throws Exception {
 		User userA = userRepository.save(createUser("aaa@aaa.com", "userA"));
@@ -266,6 +298,68 @@ public class BoardControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("스쿼드가 진행중이지 않습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("멘토가 아닌 사용자가 게시글 생성 시 오류 응답 바디 리턴")
+	void failCreateBoardWithNotMentor() throws Exception {
+		User userA = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Category category = categoryRepository.save(createCategory("JAVA"));
+		Squad squad = squadRepository.save(createSquad(category, "squad", "squadExplain", SquadStatus.PROCESS));
+		userSquadRepository.save(createMenteeUserSquad(squad, userA));
+
+		BoardCreate request = BoardCreate.builder()
+			.title("title")
+			.content("content")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(post("/api/squad/{squadId}/board", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("멘토가 아닌 사용자 입니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("스쿼드 게시글이 3개가 아닌 경우 스쿼드 생성 시 오류 응답 바디 리턴")
+	void failCreateBoardWithNotHasThreeSquadBoard() throws Exception {
+		User userA = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		User userB = userRepository.save(createUser("bbb@bbb.com", "userB"));
+		User userC = userRepository.save(createUser("ccc@ccc.com", "userC"));
+		User userD = userRepository.save(createUser("ddd@ddd.com", "userD"));
+
+		Category category = categoryRepository.save(createCategory("JAVA"));
+
+		Squad squad = squadRepository.save(createSquad(category, "squad", "squadExplain", SquadStatus.PROCESS));
+
+		userSquadRepository.saveAll(List.of(createMentorUserSquad(squad, userA), createMenteeUserSquad(squad, userB),
+			createMenteeUserSquad(squad, userC), createMenteeUserSquad(squad, userD)));
+
+		Mission mission = missionRepository.save(createMission(squad, 0, MissionStatus.PROCESS));
+
+		SquadBoard squadBoard1 = squadBoardRepository.save(createSquadBoard(userB, squad, mission));
+		SquadBoard squadBoard2 = squadBoardRepository.save(createSquadBoard(userC, squad, mission));
+
+		BoardCreate request = BoardCreate.builder()
+			.title("title")
+			.content("content")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(post("/api/squad/{squadId}/board", squad.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시물이 3개가 아닙니다."))
 			.andDo(print());
 	}
 
