@@ -54,6 +54,26 @@ public class BoardService {
 		return boardRepository.getBoards(searchCondition, pageable);
 	}
 
+	public Boolean isBoardAllowed(Long squadId, LoginUser loginUser) {
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		Squad squad = squadRepository.findById(squadId)
+			.orElseThrow(SquadNotFoundException::new);
+
+		validateMentorOfSquad(squad, user);
+
+		Mission processMission = missionRepository.getProcessMissionEntity(squad.getId())
+			.orElseThrow(NotFoundProcessMission::new);
+
+		Long squadBoardCount = missionRepository.hasSquadBoardByMissionId(processMission.getId())
+			.orElseThrow(NotFoundSquadBoard::new);
+
+		validateThreeSquadBoard(squadBoardCount);
+
+		return true;
+	}
+
 	public List<BoardResponse> getBoardsWithSquad(Long squadId, LoginUser loginUser) {
 		User user = userRepository.findByEmail(loginUser.getEmail())
 			.orElseThrow(UserNotFoundException::new);
@@ -76,9 +96,7 @@ public class BoardService {
 			throw new SquadNotProgressException();
 		}
 
-		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
-			throw new NotMentorException();
-		}
+		validateMentorOfSquad(squad, user);
 
 		Mission processMission = missionRepository.getProcessMissionEntity(squadId)
 			.orElseThrow(NotFoundProcessMission::new);
@@ -86,9 +104,7 @@ public class BoardService {
 		Long squadBoardCount = missionRepository.hasSquadBoardByMissionId(processMission.getId())
 			.orElseThrow(NotFoundSquadBoard::new);
 
-		if (!hasThreeSquadBoard(squadBoardCount)) {
-			throw new NotThreeSquadBoard();
-		}
+		validateThreeSquadBoard(squadBoardCount);
 
 		processMission.updateStatusEnd();
 
@@ -114,9 +130,7 @@ public class BoardService {
 		Squad squad = squadRepository.findById(squadId)
 			.orElseThrow(SquadNotFoundException::new);
 
-		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
-			throw new NotMentorException();
-		}
+		validateMentorOfSquad(squad, user);
 
 		Board board = boardRepository.findById(boardId)
 			.orElseThrow(NotFoundBoard::new);
@@ -135,9 +149,7 @@ public class BoardService {
 		Squad squad = squadRepository.findById(squadId)
 			.orElseThrow(SquadNotFoundException::new);
 
-		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
-			throw new NotMentorException();
-		}
+		validateMentorOfSquad(squad, user);
 
 		Board board = boardRepository.findById(boardId)
 			.orElseThrow(NotFoundBoard::new);
@@ -147,5 +159,17 @@ public class BoardService {
 
 	private boolean hasThreeSquadBoard(Long squadBoardCount) {
 		return squadBoardCount.equals(3L);
+	}
+
+	private void validateMentorOfSquad(Squad squad, User user) {
+		if (!squadRepository.isMentorOfSquad(squad.getId(), user.getId())) {
+			throw new NotMentorException();
+		}
+	}
+
+	private void validateThreeSquadBoard(Long squadBoardCount) {
+		if (!hasThreeSquadBoard(squadBoardCount)) {
+			throw new NotThreeSquadBoard();
+		}
 	}
 }
