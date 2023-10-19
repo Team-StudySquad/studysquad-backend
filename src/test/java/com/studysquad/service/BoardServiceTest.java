@@ -123,6 +123,31 @@ public class BoardServiceTest {
 	}
 
 	@Test
+	@DisplayName("게시글 작성 가능 여부 확인")
+	void successIsBoardAllowed() {
+		User user = createUser("aaa@aaa.com", "userA");
+		LoginUser loginUser = createLoginUser(user);
+		Category category = createCategory("JAVA");
+		Squad squad = createSquad(category, "squadA", "squadExplain", SquadStatus.PROCESS);
+		Mission mission = createMission(squad, 0, MissionStatus.PROCESS);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(squadRepository.findById(squad.getId()))
+			.thenReturn(Optional.of(squad));
+		when(squadRepository.isMentorOfSquad(squad.getId(), user.getId()))
+			.thenReturn(true);
+		when(missionRepository.getProcessMissionEntity(squad.getId()))
+			.thenReturn(Optional.of(mission));
+		when(missionRepository.hasSquadBoardByMissionId(mission.getId()))
+			.thenReturn(Optional.of(3L));
+
+		Boolean result = boardService.isBoardAllowed(squad.getId(), loginUser);
+
+		assertThat(result).isEqualTo(true);
+	}
+
+	@Test
 	@DisplayName("스쿼드의 게시글 전체 조회")
 	void successGetBoardsWithSquad() {
 		User user = createUser("aaa@aaa.com", "userA");
