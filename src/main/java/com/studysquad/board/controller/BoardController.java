@@ -52,6 +52,16 @@ public class BoardController {
 			.build();
 	}
 
+	@GetMapping("/api/squad/{squadId}/board/allowed")
+	@ResponseStatus(HttpStatus.OK)
+	public SuccessResponse<Boolean> isBoardAllowed(@PathVariable Long squadId, @Login LoginUser loginUser) {
+		return SuccessResponse.<Boolean>builder()
+			.status(HttpStatus.OK.value())
+			.message("게시글 작성 가능 조회 성공")
+			.data(boardService.isBoardAllowed(squadId, loginUser))
+			.build();
+	}
+
 	@GetMapping("/api/squad/{squadId}/boards")
 	@ResponseStatus(HttpStatus.OK)
 	public SuccessResponse<List<BoardResponse>> getBoardsWithSquad(@PathVariable Long squadId,
