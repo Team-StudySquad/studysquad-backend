@@ -22,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -53,7 +54,7 @@ public class Board {
 	private LocalDateTime createAt;
 
 	@Builder
-	public Board(Long id, Squad squad, User user, Mission mission, String title, String content) {
+	public Board(Squad squad, User user, Mission mission, String title, String content) {
 		this.squad = squad;
 		this.user = user;
 		this.mission = mission;
@@ -62,4 +63,8 @@ public class Board {
 		this.createAt = LocalDateTime.now();
 	}
 
+    public void edit(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }

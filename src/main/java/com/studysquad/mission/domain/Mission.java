@@ -58,4 +58,12 @@ public class Mission {
 		this.missionTitle = editRequest.getMissionTitle();
 		this.missionContent = editRequest.getMissionContent();
 	}
+
+	public void updateStatusProcess(){
+		this.missionStatus = MissionStatus.PROCESS;
+	}
+
+	public void updateStatusEnd(){
+		this.missionStatus = MissionStatus.END;
+	}
 }

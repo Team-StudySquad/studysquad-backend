@@ -13,4 +13,9 @@ public interface MissionRepositoryCustom {
 	List<MissionResponseDto> getMissions(Long squadId);
 
 	Optional<Mission> getProcessMissionEntity(Long squadId);
+
+	Optional<Long> hasSquadBoardByMissionId(Long missionId);
+
+	Optional<Mission> getNextMission(int sequence);
+
 }
