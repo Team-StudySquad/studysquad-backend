@@ -27,6 +27,7 @@ import com.studysquad.board.request.BoardEdit;
 import com.studysquad.board.request.BoardSearchCondition;
 import com.studysquad.category.domain.Category;
 import com.studysquad.category.repository.CategoryRepository;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.repository.MissionRepository;
@@ -44,8 +45,12 @@ import com.studysquad.usersquad.repository.UserSquadRepository;
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 public class BoardControllerTest {
+
 	@Autowired
 	MockMvc mockMvc;
+
+	@Autowired
+	DatabaseCleanUp databaseCleanUp;
 
 	@Autowired
 	BoardRepository boardRepository;
@@ -73,14 +78,7 @@ public class BoardControllerTest {
 
 	@BeforeEach
 	void init() {
-		squadBoardRepository.deleteAll();
-		userSquadRepository.deleteAll();
-		boardRepository.deleteAll();
-		missionRepository.deleteAll();
-		squadRepository.deleteAll();
-		userSquadRepository.deleteAll();
-		categoryRepository.deleteAll();
-		userRepository.deleteAll();
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
