@@ -107,7 +107,7 @@ public class SquadBoardServiceTest {
 
 		assertThatThrownBy(() -> squadBoardService.getSquadBoard(loginUser, squad.getId(), squadBoard.getId()))
 			.isInstanceOf(NotFoundSquadBoard.class)
-			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다.");
+			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다");
 	}
 
 	@Test
@@ -449,7 +449,7 @@ public class SquadBoardServiceTest {
 		assertThatThrownBy(
 			() -> squadBoardService.editSquadBoard(editDto, loginUser, squad.getId(), notFoundSquadBoardId))
 			.isInstanceOf(NotFoundSquadBoard.class)
-			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다.");
+			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다");
 	}
 
 	@Test
@@ -480,7 +480,7 @@ public class SquadBoardServiceTest {
 		assertThatThrownBy(
 			() -> squadBoardService.editSquadBoard(editDto, loginUser, squad.getId(), squadBoard.getId()))
 			.isInstanceOf(NotFoundSquadBoard.class)
-			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다.");
+			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다");
 	}
 
 	private Category createCategory(String categoryName) {

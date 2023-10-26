@@ -143,7 +143,7 @@ public class SquadBoardControllerTest {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 	}
 
@@ -440,7 +440,7 @@ public class SquadBoardControllerTest {
 				.content(json))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 	}
 
