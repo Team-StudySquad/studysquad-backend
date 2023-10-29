@@ -30,7 +30,8 @@ public class BoardCommentRepositoryImpl implements BoardCommentRepositoryCustom 
 				boardComment.createAt))
 			.from(boardComment)
 			.join(user).on(user.id.eq(boardComment.user.id))
-			.join(board).on(board.id.eq(boardId))
+			.join(board).on(board.id.eq(boardComment.board.id))
+			.where(boardComment.board.id.eq(boardId))
 			.fetch();
 	}
 }
