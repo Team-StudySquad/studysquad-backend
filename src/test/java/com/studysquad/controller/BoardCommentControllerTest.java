@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.boardcomment.domain.BoardComment;
+import com.studysquad.boardcomment.dto.BoardCommentCreateDto;
 import com.studysquad.boardcomment.repository.BoardCommentRepository;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.repository.UserRepository;
@@ -39,6 +42,13 @@ public class BoardCommentControllerTest {
 	BoardCommentRepository boardCommentRepository;
 	@Autowired
 	ObjectMapper objectMapper;
+
+	@BeforeEach
+	void init() {
+		boardCommentRepository.deleteAll();
+		boardRepository.deleteAll();
+		userRepository.deleteAll();
+	}
 
 	@Test
 	@DisplayName("게시글 댓글 전체 조회 성공")
@@ -68,6 +78,62 @@ public class BoardCommentControllerTest {
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("게시글 댓글 조회 성공"))
 			.andExpect(jsonPath("$.data.length()").value(boardComments.size()))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("게시글 생성 성공")
+	void successCreateBoardComment() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+
+		BoardCommentCreateDto request = BoardCommentCreateDto.builder()
+			.boardCommentContent("boardCommentContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(post("/api/board/{boardId}/boardcomment", board.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.status").value(HttpStatus.CREATED.value()))
+			.andExpect(jsonPath("$.message").value("게시글 댓글 생성 성공"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("댓글을 작성 하지 않고 생성 요청 시 댓글 생성 실패")
+	void failCreateBoardCommentWithEmptyData() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+
+		BoardCommentCreateDto request = BoardCommentCreateDto.builder()
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(post("/api/board/{boardId}/boardcomment", board.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
+			.andExpect(jsonPath("$.validation.boardCommentContent").value("댓글을 작성 해주세요"))
 			.andDo(print());
 	}
 }
