@@ -1,5 +1,6 @@
 package com.studysquad.controller;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -24,6 +25,7 @@ import com.studysquad.board.domain.Board;
 import com.studysquad.board.repository.BoardRepository;
 import com.studysquad.boardcomment.domain.BoardComment;
 import com.studysquad.boardcomment.dto.BoardCommentCreateDto;
+import com.studysquad.boardcomment.dto.BoardCommentEditDto;
 import com.studysquad.boardcomment.repository.BoardCommentRepository;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.repository.UserRepository;
@@ -134,6 +136,113 @@ public class BoardCommentControllerTest {
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다"))
 			.andExpect(jsonPath("$.validation.boardCommentContent").value("댓글을 작성 해주세요"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("게시글 댓글 수정 성공")
+	void successEditBoardComment() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build());
+		BoardCommentEditDto request = BoardCommentEditDto.builder()
+			.boardCommentContent("edit BoardCommentContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(
+				patch("/api/board/{boardId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(json))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("게시글 댓글 수정 성공"))
+			.andDo(print());
+
+		BoardComment result = boardCommentRepository.findById(boardComment.getId()).get();
+
+		assertThat(result).isNotNull();
+		assertThat(result.getId()).isEqualTo(boardComment.getId());
+		assertThat(result.getBoardCommentContent()).isEqualTo(request.getBoardCommentContent());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("게시글 정보가 일치하지 않으면 게시글 댓글 수정 실패")
+	void failEditBoardCommentWithMismatchBoardInfo() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		Board mismatchBoard = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.build());
+		BoardCommentEditDto request = BoardCommentEditDto.builder()
+			.boardCommentContent("edit boardCommentContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(
+				patch("/api/board/{boardId}/boardcomment/{boardCommentId}", mismatchBoard.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("게시글 정보가 일치하지 않습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("사용자 정보가 일치하지 않으면 게시글 댓글 수정 실패")
+	void failEditBoardCommentWithMismatchUserInfo() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("user@aaa.com")
+			.nickname("userA")
+			.build());
+		User requestUser = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("requestUser")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.build());
+		BoardCommentEditDto request = BoardCommentEditDto.builder()
+			.boardCommentContent("edit boardCommentContent")
+			.build();
+
+		String json = objectMapper.writeValueAsString(request);
+
+		mockMvc.perform(
+				patch("/api/board/{boardId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("사용자 정보가 일치하지 않습니다"))
 			.andDo(print());
 	}
 }
