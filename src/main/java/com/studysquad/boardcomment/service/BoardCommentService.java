@@ -70,6 +70,28 @@ public class BoardCommentService {
 		boardComment.edit(editRequest);
 	}
 
+	@Transactional
+	public void deleteBoardComment(Long boardId, Long boardCommentId, LoginUser loginUser) {
+
+		User user = userRepository.findByEmail(loginUser.getEmail())
+			.orElseThrow(UserNotFoundException::new);
+
+		Board board = boardRepository.findById(boardId)
+			.orElseThrow(NotFoundBoard::new);
+
+		BoardComment boardComment = boardCommentRepository.findByIdWithUserAndBoard(boardCommentId)
+			.orElseThrow(NotFoundBoardComment::new);
+
+		if (isBoardCommentNotOwnedByBoard(boardComment, board)) {
+			throw new BoardInfoMismatchException();
+		}
+		if (isBoardCommentNotOwnedByUser(boardComment, user)) {
+			throw new UserInfoMismatchException();
+		}
+
+		boardCommentRepository.deleteById(boardComment.getId());
+	}
+
 	private boolean isBoardCommentNotOwnedByBoard(BoardComment boardComment, Board board) {
 		return !boardComment.getBoard().getId().equals(board.getId());
 	}
