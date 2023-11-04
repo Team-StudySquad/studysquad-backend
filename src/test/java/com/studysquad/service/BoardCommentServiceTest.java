@@ -221,4 +221,118 @@ public class BoardCommentServiceTest {
 
 	}
 
+	@Test
+	@DisplayName("게시글 댓글 삭제 성공")
+	void successDeleteBoardComment() {
+		User user = User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build();
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.build();
+		Board board = Board.builder()
+			.user(user)
+			.build();
+		BoardComment boardComment = BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build();
+
+		ReflectionTestUtils.setField(user, "id", 1L);
+		ReflectionTestUtils.setField(board, "id", 1L);
+		ReflectionTestUtils.setField(boardComment, "id", 1L);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(boardRepository.findById(board.getId()))
+			.thenReturn(Optional.of(board));
+		when(boardCommentRepository.findByIdWithUserAndBoard(boardComment.getId()))
+			.thenReturn(Optional.of(boardComment));
+
+		boardCommentService.deleteBoardComment(board.getId(), boardComment.getId(), loginUser);
+
+		verify(boardCommentRepository, times(1)).deleteById(boardComment.getId());
+	}
+
+	@Test
+	@DisplayName("게시글 정보가 일치하지 않는 경우 게시글 댓글 삭제 실패")
+	void failDeleteBoardCommentByMismatchBoardInfo() {
+		User user = User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build();
+		LoginUser loginUser = LoginUser.builder()
+			.email(user.getEmail())
+			.build();
+		Board board = Board.builder()
+			.user(user)
+			.build();
+		Board mismatchBoard = Board.builder()
+			.user(user)
+			.build();
+		BoardComment boardComment = BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build();
+
+		ReflectionTestUtils.setField(user, "id", 1L);
+		ReflectionTestUtils.setField(board, "id", 1L);
+		ReflectionTestUtils.setField(mismatchBoard, "id", 2L);
+		ReflectionTestUtils.setField(boardComment, "id", 1L);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(user));
+		when(boardRepository.findById(mismatchBoard.getId()))
+			.thenReturn(Optional.of(mismatchBoard));
+		when(boardCommentRepository.findByIdWithUserAndBoard(boardComment.getId()))
+			.thenReturn(Optional.of(boardComment));
+
+		assertThatThrownBy(
+			() -> boardCommentService.deleteBoardComment(mismatchBoard.getId(), boardComment.getId(), loginUser))
+			.isInstanceOf(BoardInfoMismatchException.class)
+			.message().isEqualTo("게시글 정보가 일치하지 않습니다");
+	}
+
+	@Test
+	@DisplayName("사용자 정보가 일치하지 않는 경우 게시글 댓글 삭제 실패")
+	void failDeleteBoardCommentByMismatchUserInfo() {
+		User user = User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build();
+		User mismatchUser = User.builder()
+			.email("mismatch@mismatch.com")
+			.nickname("mismatchUser")
+			.build();
+		LoginUser loginUser = LoginUser.builder()
+			.email(mismatchUser.getEmail())
+			.build();
+		Board board = Board.builder()
+			.user(user)
+			.build();
+		BoardComment boardComment = BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build();
+
+		ReflectionTestUtils.setField(user, "id", 1L);
+		ReflectionTestUtils.setField(mismatchUser, "id", 2L);
+		ReflectionTestUtils.setField(board, "id", 1L);
+		ReflectionTestUtils.setField(boardComment, "id", 1L);
+
+		when(userRepository.findByEmail(loginUser.getEmail()))
+			.thenReturn(Optional.of(mismatchUser));
+		when(boardRepository.findById(board.getId()))
+			.thenReturn(Optional.of(board));
+		when(boardCommentRepository.findByIdWithUserAndBoard(boardComment.getId()))
+			.thenReturn(Optional.of(boardComment));
+
+		assertThatThrownBy(() -> boardCommentService.deleteBoardComment(board.getId(), boardComment.getId(), loginUser))
+			.isInstanceOf(UserInfoMismatchException.class)
+			.message().isEqualTo("사용자 정보가 일치하지 않습니다");
+	}
 }
