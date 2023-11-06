@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -240,6 +241,95 @@ public class BoardCommentControllerTest {
 				patch("/api/board/{boardId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(json))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("사용자 정보가 일치하지 않습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("게시글 댓글 삭제 성공")
+	void successDeleteBoardComment() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build());
+
+		mockMvc.perform(
+				delete("/api/board/{boardId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
+			.andExpect(jsonPath("$.message").value("게시글 삭제 성공"))
+			.andDo(print());
+
+		Optional<BoardComment> result = boardCommentRepository.findById(boardComment.getId());
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("게시글 정보가 일치하지 않으면 게시글 댓글 삭제 실패")
+	void failDeleteBoardCommentWithMismatchBoardInfo() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		Board mismatchBoard = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build());
+
+		mockMvc.perform(
+				delete("/api/board/{baordId}/boardcomment/{boardCommentId}", mismatchBoard.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+			.andExpect(jsonPath("$.message").value("게시글 정보가 일치하지 않습니다"))
+			.andDo(print());
+	}
+
+	@Test
+	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
+	@DisplayName("사용자 정보가 일치하지 않으면 게시글 댓글 삭제 실패")
+	void failDeleteBoardCommentWithMismatchUserInfo() throws Exception {
+		User user = userRepository.save(User.builder()
+			.email("userA@aaa.com")
+			.nickname("userA")
+			.build());
+		User mismatchUser = userRepository.save(User.builder()
+			.email("aaa@aaa.com")
+			.nickname("mismatchUser")
+			.build());
+		Board board = boardRepository.save(Board.builder()
+			.user(user)
+			.build());
+		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build());
+
+		mockMvc.perform(
+				delete("/api/board/{baordId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
+					.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("사용자 정보가 일치하지 않습니다"))
