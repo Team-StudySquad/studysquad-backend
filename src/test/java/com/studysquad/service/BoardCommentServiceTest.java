@@ -48,13 +48,7 @@ public class BoardCommentServiceTest {
 	void successGetBoardComments() {
 		Long boardId = 1L;
 
-		List<BoardCommentResponse> boardCommentsResponse = IntStream.range(1, 31)
-			.mapToObj(i -> BoardCommentResponse.builder()
-				.boardCommentContent("boardCommentContent" + i)
-				.creator("user" + i)
-				.createAt(LocalDateTime.now())
-				.build())
-			.collect(Collectors.toList());
+		List<BoardCommentResponse> boardCommentsResponse = createBoardCommentResponse();
 
 		when(boardCommentRepository.getBoardComments(boardId))
 			.thenReturn(boardCommentsResponse);
@@ -69,19 +63,10 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("게시글 댓글 생성 성공")
 	void successCreateBoardComment() {
-		User user = User.builder()
-			.email("userA@aaa.com")
-			.nickname("userA")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		BoardCommentCreateDto request = BoardCommentCreateDto.builder()
-			.boardCommentContent("boardCommentContent")
-			.build();
+		User user = createUser();
+		LoginUser loginUser = createLoginUser(user);
+		Board board = createBoard(user);
+		BoardCommentCreateDto request = createBoardCommentCreateDto();
 
 		when(userRepository.findByEmail(loginUser.getEmail()))
 			.thenReturn(Optional.of(user));
@@ -96,24 +81,11 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("게시글 댓글 수정 성공")
 	void successEditBoardComment() {
-		User user = User.builder()
-			.email("userA@aaa.com")
-			.nickname("userA")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
-		BoardCommentEditDto editRequest = BoardCommentEditDto.builder()
-			.boardCommentContent("Edit boardCommentContent")
-			.build();
+		User user = createUser();
+		LoginUser loginUser = createLoginUser(user);
+		Board board = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
+		BoardCommentEditDto editRequest = createBoardCommentEditDto();
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(board, "id", 1L);
@@ -134,27 +106,12 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("게시글 정보가 일치 하지 않은 경우 게시글 댓글 수정 실패")
 	void failEditBoardCommentByMismatchBoardInfo() {
-		User user = User.builder()
-			.email("userA@aaa.com")
-			.nickname("userA")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		Board mismatchBoard = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
-		BoardCommentEditDto editRequest = BoardCommentEditDto.builder()
-			.boardCommentContent("Edit boardCommentContent")
-			.build();
+		User user = createUser();
+		LoginUser loginUser = createLoginUser(user);
+		Board board = createBoard(user);
+		Board mismatchBoard = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
+		BoardCommentEditDto editRequest = createBoardCommentEditDto();
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(board, "id", 1L);
@@ -178,28 +135,12 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("사용자 정보가 일치하지 않는 경우 게시글 댓글 수정 실패")
 	void failEditBoardCommentByMismatchUserInfo() {
-		User user = User.builder()
-			.email("userA@aaa.com")
-			.nickname("userA")
-			.build();
-		User mismatchUser = User.builder()
-			.email("mismatch@mismatch.com")
-			.nickname("mismatchUser")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(mismatchUser.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
-		BoardCommentEditDto editRequest = BoardCommentEditDto.builder()
-			.boardCommentContent("Edit boardCommentContent")
-			.build();
+		User user = createUser();
+		User mismatchUser = createMismatchUser();
+		LoginUser loginUser = createLoginUser(mismatchUser);
+		Board board = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
+		BoardCommentEditDto editRequest = createBoardCommentEditDto();
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(mismatchUser, "id", 2L);
@@ -224,21 +165,10 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("게시글 댓글 삭제 성공")
 	void successDeleteBoardComment() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
+		User user = createUser();
+		LoginUser loginUser = createLoginUser(user);
+		Board board = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(board, "id", 1L);
@@ -259,24 +189,11 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("게시글 정보가 일치하지 않는 경우 게시글 댓글 삭제 실패")
 	void failDeleteBoardCommentByMismatchBoardInfo() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(user.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		Board mismatchBoard = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
+		User user = createUser();
+		LoginUser loginUser = createLoginUser(user);
+		Board board = createBoard(user);
+		Board mismatchBoard = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(board, "id", 1L);
@@ -299,25 +216,11 @@ public class BoardCommentServiceTest {
 	@Test
 	@DisplayName("사용자 정보가 일치하지 않는 경우 게시글 댓글 삭제 실패")
 	void failDeleteBoardCommentByMismatchUserInfo() {
-		User user = User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build();
-		User mismatchUser = User.builder()
-			.email("mismatch@mismatch.com")
-			.nickname("mismatchUser")
-			.build();
-		LoginUser loginUser = LoginUser.builder()
-			.email(mismatchUser.getEmail())
-			.build();
-		Board board = Board.builder()
-			.user(user)
-			.build();
-		BoardComment boardComment = BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build();
+		User user = createUser();
+		User mismatchUser = createMismatchUser();
+		LoginUser loginUser = createLoginUser(mismatchUser);
+		Board board = createBoard(user);
+		BoardComment boardComment = createBoardComment(user, board);
 
 		ReflectionTestUtils.setField(user, "id", 1L);
 		ReflectionTestUtils.setField(mismatchUser, "id", 2L);
@@ -334,5 +237,61 @@ public class BoardCommentServiceTest {
 		assertThatThrownBy(() -> boardCommentService.deleteBoardComment(board.getId(), boardComment.getId(), loginUser))
 			.isInstanceOf(UserInfoMismatchException.class)
 			.message().isEqualTo("사용자 정보가 일치하지 않습니다");
+	}
+
+	private User createUser() {
+		return User.builder()
+			.email("aaa@aaa.com")
+			.nickname("userA")
+			.build();
+	}
+
+	private User createMismatchUser() {
+		return User.builder()
+			.email("mistmatch@mistmatch.com")
+			.nickname("mismatchUser")
+			.build();
+	}
+
+	private List<BoardCommentResponse> createBoardCommentResponse() {
+		return IntStream.range(1, 31)
+			.mapToObj(i -> BoardCommentResponse.builder()
+				.boardCommentContent("boardCommentContent" + i)
+				.creator("user" + i)
+				.createAt(LocalDateTime.now())
+				.build())
+			.collect(Collectors.toList());
+	}
+
+	private LoginUser createLoginUser(User user) {
+		return LoginUser.builder()
+			.email(user.getEmail())
+			.build();
+	}
+
+	private Board createBoard(User user) {
+		return Board.builder()
+			.user(user)
+			.build();
+	}
+
+	private BoardComment createBoardComment(User user, Board board) {
+		return BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build();
+	}
+
+	private BoardCommentCreateDto createBoardCommentCreateDto() {
+		return BoardCommentCreateDto.builder()
+			.boardCommentContent("boardCommentContent")
+			.build();
+	}
+
+	private BoardCommentEditDto createBoardCommentEditDto() {
+		return BoardCommentEditDto.builder()
+			.boardCommentContent("Edit boardCommentContent")
+			.build();
 	}
 }
