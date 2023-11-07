@@ -88,7 +88,7 @@ public class SquadBoardService {
 			throw new ExistSquadBoardByProcessMission();
 		}
 
-		squadBoardRepository.save(squadBoardDto.toEntity());
+		squadBoardRepository.save(squadBoardDto.toEntity(squad, user, processMission));
 	}
 
 	@Transactional
