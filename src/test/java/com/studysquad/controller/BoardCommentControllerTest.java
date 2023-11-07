@@ -56,24 +56,9 @@ public class BoardCommentControllerTest {
 	@Test
 	@DisplayName("게시글 댓글 전체 조회 성공")
 	void successGetBoardComments() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-
-		List<BoardComment> boardComments = LongStream.range(1, 31)
-			.mapToObj(i -> BoardComment.builder()
-				.user(user)
-				.board(board)
-				.boardCommentContent("content" + i)
-				.build())
-			.collect(Collectors.toList());
-
-		boardCommentRepository.saveAll(boardComments);
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
+		List<BoardComment> boardComments = boardCommentRepository.saveAll(createBoardComments(user, board));
 
 		mockMvc.perform(get("/api/board/{boardId}/boardcomments", board.getId())
 				.contentType(MediaType.APPLICATION_JSON))
@@ -88,14 +73,8 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 생성 성공")
 	void successCreateBoardComment() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
 
 		BoardCommentCreateDto request = BoardCommentCreateDto.builder()
 			.boardCommentContent("boardCommentContent")
@@ -116,14 +95,8 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("댓글을 작성 하지 않고 생성 요청 시 댓글 생성 실패")
 	void failCreateBoardCommentWithEmptyData() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
 
 		BoardCommentCreateDto request = BoardCommentCreateDto.builder()
 			.build();
@@ -144,18 +117,9 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 댓글 수정 성공")
 	void successEditBoardComment() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
 		BoardCommentEditDto request = BoardCommentEditDto.builder()
 			.boardCommentContent("edit BoardCommentContent")
 			.build();
@@ -182,20 +146,11 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 정보가 일치하지 않으면 게시글 댓글 수정 실패")
 	void failEditBoardCommentWithMismatchBoardInfo() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		Board mismatchBoard = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
+		Board mismatchBoard = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
+
 		BoardCommentEditDto request = BoardCommentEditDto.builder()
 			.boardCommentContent("edit boardCommentContent")
 			.build();
@@ -216,21 +171,11 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("사용자 정보가 일치하지 않으면 게시글 댓글 수정 실패")
 	void failEditBoardCommentWithMismatchUserInfo() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("user@aaa.com")
-			.nickname("userA")
-			.build());
-		User requestUser = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("requestUser")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.build());
+		User user = userRepository.save(createUser("user@aaa.com", "userA"));
+		User requestUser = userRepository.save(createUser("aaa@aaa.com", "requestUser"));
+		Board board = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
+
 		BoardCommentEditDto request = BoardCommentEditDto.builder()
 			.boardCommentContent("edit boardCommentContent")
 			.build();
@@ -251,18 +196,9 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 댓글 삭제 성공")
 	void successDeleteBoardComment() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
 
 		mockMvc.perform(
 				delete("/api/board/{boardId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
@@ -281,21 +217,10 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("게시글 정보가 일치하지 않으면 게시글 댓글 삭제 실패")
 	void failDeleteBoardCommentWithMismatchBoardInfo() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("userA")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		Board mismatchBoard = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build());
+		User user = userRepository.save(createUser("aaa@aaa.com", "userA"));
+		Board board = boardRepository.save(createBoard(user));
+		Board mismatchBoard = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
 
 		mockMvc.perform(
 				delete("/api/board/{baordId}/boardcomment/{boardCommentId}", mismatchBoard.getId(), boardComment.getId())
@@ -310,22 +235,10 @@ public class BoardCommentControllerTest {
 	@WithMockUser(username = "aaa@aaa.com", roles = "USER")
 	@DisplayName("사용자 정보가 일치하지 않으면 게시글 댓글 삭제 실패")
 	void failDeleteBoardCommentWithMismatchUserInfo() throws Exception {
-		User user = userRepository.save(User.builder()
-			.email("userA@aaa.com")
-			.nickname("userA")
-			.build());
-		User mismatchUser = userRepository.save(User.builder()
-			.email("aaa@aaa.com")
-			.nickname("mismatchUser")
-			.build());
-		Board board = boardRepository.save(Board.builder()
-			.user(user)
-			.build());
-		BoardComment boardComment = boardCommentRepository.save(BoardComment.builder()
-			.user(user)
-			.board(board)
-			.boardCommentContent("boardCommentContent")
-			.build());
+		User user = userRepository.save(createUser("userA@aaa.com", "userA"));
+		User mismatchUser = userRepository.save(createUser("aaa@aaa.com", "mismatchUser"));
+		Board board = boardRepository.save(createBoard(user));
+		BoardComment boardComment = boardCommentRepository.save(createBoardComment(user, board));
 
 		mockMvc.perform(
 				delete("/api/board/{baordId}/boardcomment/{boardCommentId}", board.getId(), boardComment.getId())
@@ -334,5 +247,36 @@ public class BoardCommentControllerTest {
 			.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 			.andExpect(jsonPath("$.message").value("사용자 정보가 일치하지 않습니다"))
 			.andDo(print());
+	}
+
+	private User createUser(String email, String nickname) {
+		return User.builder()
+			.email(email)
+			.nickname(nickname)
+			.build();
+	}
+
+	private Board createBoard(User user) {
+		return Board.builder()
+			.user(user)
+			.build();
+	}
+
+	private BoardComment createBoardComment(User user, Board board) {
+		return BoardComment.builder()
+			.user(user)
+			.board(board)
+			.boardCommentContent("boardCommentContent")
+			.build();
+	}
+
+	private List<BoardComment> createBoardComments(User user, Board board) {
+		return LongStream.range(1, 31)
+			.mapToObj(i -> BoardComment.builder()
+				.user(user)
+				.board(board)
+				.boardCommentContent("content" + i)
+				.build())
+			.collect(Collectors.toList());
 	}
 }
