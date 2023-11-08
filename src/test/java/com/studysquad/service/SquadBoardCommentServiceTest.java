@@ -126,7 +126,7 @@ public class SquadBoardCommentServiceTest {
 		assertThatThrownBy(
 			() -> squadBoardCommentService.getSquadBoardComments(loginUser, squad.getId(), notFoundSquadBoardId))
 			.isInstanceOf(NotFoundSquadBoard.class)
-			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다.");
+			.message().isEqualTo("스쿼드 게시글을 찾을 수 없습니다");
 	}
 
 	@Test
@@ -390,5 +390,4 @@ public class SquadBoardCommentServiceTest {
 			.role(user.getRole())
 			.build();
 	}
-
 }

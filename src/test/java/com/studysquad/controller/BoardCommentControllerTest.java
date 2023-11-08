@@ -28,6 +28,7 @@ import com.studysquad.boardcomment.domain.BoardComment;
 import com.studysquad.boardcomment.dto.BoardCommentCreateDto;
 import com.studysquad.boardcomment.dto.BoardCommentEditDto;
 import com.studysquad.boardcomment.repository.BoardCommentRepository;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.user.domain.User;
 import com.studysquad.user.repository.UserRepository;
 
@@ -37,6 +38,8 @@ public class BoardCommentControllerTest {
 
 	@Autowired
 	MockMvc mockMvc;
+	@Autowired
+	DatabaseCleanUp databaseCleanUp;
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -48,9 +51,7 @@ public class BoardCommentControllerTest {
 
 	@BeforeEach
 	void init() {
-		boardCommentRepository.deleteAll();
-		boardRepository.deleteAll();
-		userRepository.deleteAll();
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test

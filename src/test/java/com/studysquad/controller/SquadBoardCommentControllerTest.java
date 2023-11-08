@@ -19,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.sqaudboardcomment.domain.SquadBoardComment;
 import com.studysquad.sqaudboardcomment.dto.SquadBoardCommentCreateDto;
 import com.studysquad.sqaudboardcomment.dto.SquadBoardCommentEditDto;
@@ -41,6 +42,8 @@ public class SquadBoardCommentControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired
 	UserRepository userRepository;
@@ -55,11 +58,7 @@ public class SquadBoardCommentControllerTest {
 
 	@BeforeEach
 	void init() {
-		squadBoardCommentRepository.deleteAll();
-		squadBoardRepository.deleteAll();
-		userSquadRepository.deleteAll();
-		squadRepository.deleteAll();
-		userRepository.deleteAll();
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
@@ -167,7 +166,7 @@ public class SquadBoardCommentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 	}
 
@@ -229,7 +228,7 @@ public class SquadBoardCommentControllerTest {
 				.content(json))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 
 	}
