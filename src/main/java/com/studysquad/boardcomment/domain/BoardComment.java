@@ -14,6 +14,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 
 import com.studysquad.board.domain.Board;
+import com.studysquad.boardcomment.dto.BoardCommentEditDto;
 import com.studysquad.user.domain.User;
 
 import lombok.AccessLevel;
@@ -52,4 +53,7 @@ public class BoardComment {
 		this.createAt = LocalDateTime.now();
 	}
 
+	public void edit(BoardCommentEditDto edit) {
+		this.boardCommentContent = edit.getBoardCommentContent();
+	}
 }
