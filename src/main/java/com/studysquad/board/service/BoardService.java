@@ -108,7 +108,7 @@ public class BoardService {
 
 		processMission.updateStatusEnd();
 
-		missionRepository.getNextMission(processMission.getMissionSequence())
+		missionRepository.getNextMission(squad.getId(), processMission.getMissionSequence())
 			.ifPresentOrElse(Mission::updateStatusProcess,
 				() -> squad.updateStatus(SquadStatus.END));
 
