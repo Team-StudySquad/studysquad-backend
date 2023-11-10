@@ -74,7 +74,8 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
 			.join(user).on(board.user.id.eq(user.id))
 			.join(squad).on(board.squad.id.eq(squadId))
 			.join(mission).on(board.mission.id.eq(mission.id))
-			.join(category).on(squad.category.id.eq(category.id))
+			.join(category).on(squad.category.id.eq(category.id)
+				.and(squad.id.eq(squadId)))
 			.fetch();
 	}
 
