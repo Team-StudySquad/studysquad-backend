@@ -129,7 +129,7 @@ include::{snippets}/get-process-squad/request-headers.adoc[]
 
 include::{snippets}/get-process-squad/http-response.adoc[]
 
-응답 바디
+==== 응답 바디
 
 include::{snippets}/get-process-squad/response-body.adoc[]
 include::{snippets}/get-process-squad/response-fields.adoc[]
@@ -341,3 +341,107 @@ include::{snippets}/edit-mission/http-response.adoc[]
 
 include::{snippets}/edit-mission/response-body.adoc[]
 include::{snippets}/edit-mission/response-fields.adoc[]
+
+== 스쿼드 게시글 API
+
+=== 스쿼드 게시글 단건 조회
+
+==== HTTP Request
+
+include::{snippets}/get-squad-board/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-squad-board/path-parameters.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/get-squad-board/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-squad-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-squad-board/response-body.adoc[]
+include::{snippets}/get-squad-board/response-fields.adoc[]
+
+=== 스쿼드 게시글 전체 조회
+
+==== HTTP Request
+
+include::{snippets}/get-squad-boards/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-squad-boards/path-parameters.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/get-squad-boards/request-headers.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-squad-boards/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-squad-boards/response-body.adoc[]
+include::{snippets}/get-squad-boards/response-fields.adoc[]
+
+=== 스쿼드 게시글 생성
+
+==== HTTP Request
+
+include::{snippets}/create-squad-board/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/create-squad-board/path-parameters.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/create-squad-board/request-headers.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/create-squad-board/request-body.adoc[]
+include::{snippets}/create-squad-board/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/create-squad-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/create-squad-board/response-body.adoc[]
+include::{snippets}/create-squad-board/response-fields.adoc[]
+
+=== 스쿼드 게시글 수정
+
+==== HTTP Request
+
+include::{snippets}/edit-squad-board/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/edit-squad-board/path-parameters.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/edit-squad-board/request-headers.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/edit-squad-board/request-body.adoc[]
+include::{snippets}/edit-squad-board/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/edit-squad-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/edit-squad-board/response-body.adoc[]
+include::{snippets}/edit-squad-board/response-fields.adoc[]
