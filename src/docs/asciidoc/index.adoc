@@ -549,3 +549,168 @@ include::{snippets}/delete-squad-board-comment/http-response.adoc[]
 
 include::{snippets}/delete-squad-board-comment/response-body.adoc[]
 include::{snippets}/delete-squad-board-comment/response-fields.adoc[]
+
+== 게시글 API
+
+=== 게시글 단건 조회
+
+==== HTTP Request
+
+include::{snippets}/get-board/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-board/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-board/response-body.adoc[]
+include::{snippets}/get-board/response-fields.adoc[]
+
+=== 게시글 페이징 조회
+
+==== HTTP Request
+
+include::{snippets}/get-boards-with-page/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-boards-with-page/request-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-boards-with-page/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-boards-with-page/response-body.adoc[]
+include::{snippets}/get-boards-with-page/response-fields.adoc[]
+
+=== 게시글 작성 가능 조회
+
+==== HTTP Request
+
+include::{snippets}/get-board-allowed/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/get-board-allowed/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-board-allowed/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-board-allowed/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-board-allowed/response-body.adoc[]
+include::{snippets}/get-board-allowed/response-fields.adoc[]
+
+=== 스쿼드 내 전체 게시글 조회
+
+==== HTTP Request
+
+include::{snippets}/get-boards-with-squad/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/get-boards-with-squad/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-boards-with-squad/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-boards-with-squad/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-boards-with-squad/response-body.adoc[]
+include::{snippets}/get-boards-with-squad/response-fields.adoc[]
+
+=== 게시글 작성
+
+==== HTTP Request
+
+include::{snippets}/create-board/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/create-board/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/create-board/path-parameters.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/create-board/request-body.adoc[]
+include::{snippets}/create-board/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/create-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/create-board/response-body.adoc[]
+include::{snippets}/create-board/response-fields.adoc[]
+
+=== 게시글 수정
+
+==== HTTP Request
+
+include::{snippets}/edit-board/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/edit-board/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/edit-board/path-parameters.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/edit-board/request-body.adoc[]
+include::{snippets}/edit-board/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/edit-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/edit-board/response-body.adoc[]
+include::{snippets}/edit-board/response-fields.adoc[]
+
+=== 게시글 삭제
+
+==== HTTP Request
+
+include::{snippets}/delete-board/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/delete-board/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/delete-board/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/delete-board/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/delete-board/http-response.adoc[]
+include::{snippets}/delete-board/response-fields.adoc[]
