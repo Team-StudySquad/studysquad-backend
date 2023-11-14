@@ -714,3 +714,103 @@ include::{snippets}/delete-board/http-response.adoc[]
 
 include::{snippets}/delete-board/http-response.adoc[]
 include::{snippets}/delete-board/response-fields.adoc[]
+
+== 게시글 댓글 API
+
+=== 게시글 댓글 조회
+
+==== HTTP Request
+
+include::{snippets}/get-board-comments/http-request.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/get-board-comments/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/get-board-comments/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/get-board-comments/response-body.adoc[]
+include::{snippets}/get-board-comments/response-fields.adoc[]
+
+=== 게시글 댓글 생성
+
+==== HTTP Request
+
+include::{snippets}/create-board-comment/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/create-board-comment/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/create-board-comment/path-parameters.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/create-board-comment/request-body.adoc[]
+include::{snippets}/create-board-comment/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/create-board-comment/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/create-board-comment/response-body.adoc[]
+include::{snippets}/create-board-comment/response-fields.adoc[]
+
+=== 게시글 댓글 수정
+
+==== HTTP Request
+
+include::{snippets}/edit-board-comment/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/edit-board-comment/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/edit-board-comment/path-parameters.adoc[]
+
+==== 요청 바디
+
+include::{snippets}/edit-board-comment/request-body.adoc[]
+include::{snippets}/edit-board-comment/request-fields.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/edit-board-comment/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/edit-board-comment/response-body.adoc[]
+include::{snippets}/edit-board-comment/response-fields.adoc[]
+
+=== 게시글 댓글 삭제
+
+==== HTTP Request
+
+include::{snippets}/delete-board-comment/http-request.adoc[]
+
+==== 요청 헤더
+
+include::{snippets}/delete-board-comment/request-headers.adoc[]
+
+==== 요청 파라미터
+
+include::{snippets}/delete-board-comment/path-parameters.adoc[]
+
+==== HTTP Response
+
+include::{snippets}/delete-board-comment/http-response.adoc[]
+
+==== 응답 바디
+
+include::{snippets}/delete-board-comment/response-body.adoc[]
+include::{snippets}/delete-board-comment/response-fields.adoc[]
