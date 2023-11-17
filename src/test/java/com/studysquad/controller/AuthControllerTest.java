@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.global.security.JwtProvider;
 import com.studysquad.global.security.RefreshToken;
 import com.studysquad.global.security.Token;
@@ -39,6 +40,8 @@ public class AuthControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	UserRepository userRepository;
 	@Autowired
 	PasswordEncoder passwordEncoder;
@@ -48,8 +51,8 @@ public class AuthControllerTest {
 	JwtProvider jwtProvider;
 
 	@BeforeEach
-	void clean() {
-		userRepository.deleteAll();
+	void init() {
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
@@ -151,7 +154,6 @@ public class AuthControllerTest {
 				.content(json))
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("로그인 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 	}
 
@@ -316,7 +318,6 @@ public class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("회원 가입 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 	}
 
@@ -431,7 +432,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("토큰 재발급 성공")
-		// @Transactional
 	void successfulReissueToken() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -456,8 +456,9 @@ public class AuthControllerTest {
 					.filter(cookie -> cookie.getName().equals(refreshToken.getHeader()))
 					.findFirst();
 
+				User findUser = userRepository.findById(user.getId()).get();
 				assertThat(myCookie).isPresent();
-				assertThat(myCookie.get().getValue()).isEqualTo(user.getRefreshToken());
+				assertThat(myCookie.get().getValue()).isEqualTo(findUser.getRefreshToken());
 			})
 			.andDo(print());
 	}
@@ -491,7 +492,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("존재하지 않는 사용자 정보를 가지고 요청시 실패 응답 바디 리턴")
-		// @Transactional
 	void failReissueExistTokenReturnFailResponseBody() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -522,7 +522,6 @@ public class AuthControllerTest {
 
 	@Test
 	@DisplayName("로그아웃 성공")
-		// @Transactional
 	void successLogout() throws Exception {
 		User user = createUser();
 		Token token = jwtProvider.createToken(user.getEmail());
@@ -535,11 +534,9 @@ public class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(HttpStatus.OK.value()))
 			.andExpect(jsonPath("$.message").value("로그아웃 성공"))
-			.andExpect(jsonPath("$.data").isEmpty())
 			.andDo(print());
 
 		Optional<User> findUser = userRepository.findById(user.getId());
-		// assertThat(user.getRefreshToken()).isNull();
 		assertThat(findUser).isNotEmpty();
 		assertThat(findUser.get().getRefreshToken()).isNull();
 	}

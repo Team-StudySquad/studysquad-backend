@@ -74,9 +74,10 @@ public class MissionRepositoryImpl implements MissionRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Mission> getNextMission(int sequence) {
+	public Optional<Mission> getNextMission(Long squadId, int sequence) {
 		Mission fetchOne = queryFactory.selectFrom(mission)
-			.where(mission.missionSequence.eq(sequence + 1))
+			.where(mission.missionSequence.eq(sequence + 1)
+				.and(mission.squad.id.eq(squadId)))
 			.fetchOne();
 
 		return Optional.ofNullable(fetchOne);

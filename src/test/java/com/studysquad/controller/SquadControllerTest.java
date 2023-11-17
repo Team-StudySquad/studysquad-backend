@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studysquad.category.domain.Category;
 import com.studysquad.category.repository.CategoryRepository;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.squad.domain.Squad;
 import com.studysquad.squad.domain.SquadStatus;
 import com.studysquad.squad.dto.SquadCreateDto;
@@ -45,6 +46,8 @@ public class SquadControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	UserRepository userRepository;
 	@Autowired
 	SquadRepository squadRepository;
@@ -57,10 +60,7 @@ public class SquadControllerTest {
 
 	@BeforeEach
 	void init() {
-		userSquadRepository.deleteAll();
-		squadRepository.deleteAll();
-		userRepository.deleteAll();
-		categoryRepository.deleteAll();
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test

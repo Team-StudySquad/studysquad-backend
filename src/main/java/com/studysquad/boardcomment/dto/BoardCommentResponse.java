@@ -13,13 +13,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardCommentResponse {
 
+	private Long boardCommentId;
 	private String boardCommentContent;
 	private String creator;
 	private LocalDateTime createAt;
 
 	@Builder
 	@QueryProjection
-	public BoardCommentResponse(String boardCommentContent, String creator, LocalDateTime createAt) {
+	public BoardCommentResponse(Long boardCommentId, String boardCommentContent, String creator,
+		LocalDateTime createAt) {
+		this.boardCommentId = boardCommentId;
 		this.boardCommentContent = boardCommentContent;
 		this.creator = creator;
 		this.createAt = createAt;

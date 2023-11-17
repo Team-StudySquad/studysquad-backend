@@ -19,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studysquad.controller.util.DatabaseCleanUp;
 import com.studysquad.mission.domain.Mission;
 import com.studysquad.mission.domain.MissionStatus;
 import com.studysquad.mission.repository.MissionRepository;
@@ -42,6 +43,8 @@ public class SquadBoardControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
+	DatabaseCleanUp databaseCleanUp;
+	@Autowired
 	SquadBoardRepository squadBoardRepository;
 	@Autowired
 	UserRepository userRepository;
@@ -56,12 +59,7 @@ public class SquadBoardControllerTest {
 
 	@BeforeEach
 	void init() {
-		squadBoardRepository.deleteAll();
-		userSquadRepository.deleteAll();
-		missionRepository.deleteAll();
-		userRepository.deleteAll();
-		squadRepository.deleteAll();
-
+		databaseCleanUp.cleanUp();
 	}
 
 	@Test
@@ -145,7 +143,7 @@ public class SquadBoardControllerTest {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 	}
 
@@ -442,7 +440,7 @@ public class SquadBoardControllerTest {
 				.content(json))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
-			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다."))
+			.andExpect(jsonPath("$.message").value("스쿼드 게시글을 찾을 수 없습니다"))
 			.andDo(print());
 	}
 

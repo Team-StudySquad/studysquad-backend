@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -278,8 +277,8 @@ public class MissionServiceTest {
 
 		missionService.editMission(squad.getId(), mission.getId(), editRequest, loginUser);
 
-		AssertionsForClassTypes.assertThat(mission.getMissionTitle()).isEqualTo(editRequest.getMissionTitle());
-		AssertionsForClassTypes.assertThat(mission.getMissionContent()).isEqualTo(editRequest.getMissionContent());
+		assertThat(mission.getMissionTitle()).isEqualTo(editRequest.getMissionTitle());
+		assertThat(mission.getMissionContent()).isEqualTo(editRequest.getMissionContent());
 	}
 
 	@Test

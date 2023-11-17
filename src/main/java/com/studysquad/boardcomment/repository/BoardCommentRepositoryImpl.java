@@ -25,6 +25,7 @@ public class BoardCommentRepositoryImpl implements BoardCommentRepositoryCustom 
 	@Override
 	public List<BoardCommentResponse> getBoardComments(Long boardId) {
 		return queryFactory.select(new QBoardCommentResponse(
+				boardComment.id,
 				boardComment.boardCommentContent,
 				user.nickname,
 				boardComment.createAt))

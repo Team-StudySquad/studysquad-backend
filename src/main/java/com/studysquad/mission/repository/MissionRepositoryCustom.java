@@ -16,6 +16,6 @@ public interface MissionRepositoryCustom {
 
 	Optional<Long> hasSquadBoardByMissionId(Long missionId);
 
-	Optional<Mission> getNextMission(int sequence);
+	Optional<Mission> getNextMission(Long squadId, int sequence);
 
 }

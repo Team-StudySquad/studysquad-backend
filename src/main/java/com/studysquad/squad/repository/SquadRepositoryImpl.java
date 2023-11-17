@@ -153,12 +153,14 @@ public class SquadRepositoryImpl implements SquadRepositoryCustom {
 			.fetch();
 
 		JPAQuery<Long> countQuery = queryFactory
-			.select(squad.count())
+			.select(squad.id.countDistinct())
 			.from(squad)
 			.join(userSquad)
 			.on(userSquad.squad.id.eq(squad.id))
 			.join(category)
 			.on(category.id.eq(squad.category.id))
+			.leftJoin(user)
+			.on(userSquad.user.id.eq(user.id).and(userSquad.isCreator.isTrue()))
 			.leftJoin(mentorUserSquad)
 			.on(mentorUserSquad.squad.id.eq(userSquad.squad.id).and(mentorUserSquad.isMentor.isTrue()))
 			.where(squad.squadStatus.eq(SquadStatus.RECRUIT),

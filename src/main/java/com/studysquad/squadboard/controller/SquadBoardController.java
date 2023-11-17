@@ -66,7 +66,6 @@ public class SquadBoardController {
 			.build();
 	}
 
-	// todo. PatchMapping OK
 	@PatchMapping("/api/squad/{squadId}/squadboard/{squadBoardId}")
 	@ResponseStatus(HttpStatus.OK)
 	public SuccessResponse<Void> editSquadBoard(@RequestBody @Valid SquadBoardEditDto editRequest,

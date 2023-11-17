@@ -39,8 +39,8 @@ public class SquadBoardCommentRepositoryImpl implements SquadBoardCommentReposit
 	public List<SquadBoardCommentResponseDto> getSquadBoardComments(Long squadBoardId) {
 		return queryFactory.select(new QSquadBoardCommentResponseDto(
 				squadBoardComment.id,
-				user.nickname,
 				squadBoardComment.squadBoardCommentContent,
+				user.nickname,
 				squadBoardComment.createAt
 			))
 			.from(squadBoardComment)
