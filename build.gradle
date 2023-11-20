@@ -9,6 +9,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.13'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
 }
 
 group = 'com.studysquad'
@@ -22,26 +23,81 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    asciidoctorExt
 }
 
 repositories {
     mavenCentral()
 }
 
+processResources.dependsOn('copyServiceConfig')
+
+tasks.register('copyServiceConfig', Copy) {
+    copy {
+        from './submodule-config/service'
+        include "*.yml"
+        into 'src/main/resources'
+    }
+}
+
+processTestResources.dependsOn('copyTestConfig')
+
+tasks.register('copyTestConfig', Copy) {
+    copy {
+        from './submodule-config/test'
+        include "*.yml"
+        into 'src/test/resources'
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'mysql:mysql-connector-java:8.0.28'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation group: 'com.google.guava', name: 'guava', version: '32.1.1-jre'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5', 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
     annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}"
+
+
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 }
+
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorExt'
+    dependsOn test
+}
+
+bootJar {
+    dependsOn asciidoctor
+    copy {
+        from asciidoctor.outputDir
+        into "src/main/resources/static/docs"
+    }
+}
+
 
 tasks.named('test') {
     useJUnitPlatform()
@@ -57,6 +113,9 @@ sourceSets {
     main.java.srcDir querydslDir
 }
 configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
     querydsl.extendsFrom compileClasspath
 }
 compileQuerydsl {

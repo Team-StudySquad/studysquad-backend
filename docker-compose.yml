@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  spring:
+    container_name: studysquad
+    image: jwooo/studysquad-backend:latest
+    ports:
+      - 8080:8080
+    networks:
+      - studysquad_network
+
+networks:
+  studysquad_network:
+    driver: bridge
