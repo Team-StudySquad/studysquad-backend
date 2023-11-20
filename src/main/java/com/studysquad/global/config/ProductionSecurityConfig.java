@@ -77,6 +77,7 @@ public class ProductionSecurityConfig {
 		config.setAllowedOrigins(Arrays.asList("*"));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE"));
 		config.setAllowedHeaders(Arrays.asList("*"));
+		config.setExposedHeaders(Arrays.asList("Authorization"));
 		config.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
