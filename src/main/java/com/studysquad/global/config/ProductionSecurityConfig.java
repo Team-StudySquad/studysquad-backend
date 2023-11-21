@@ -74,7 +74,7 @@ public class ProductionSecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 
-		config.setAllowedOrigins(Arrays.asList("*"));
+		config.setAllowedOriginPatterns(Arrays.asList("*"));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE"));
 		config.setAllowedHeaders(Arrays.asList("*"));
 		config.setExposedHeaders(Arrays.asList("Authorization"));
